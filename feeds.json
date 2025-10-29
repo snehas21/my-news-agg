@@ -4,5 +4,9 @@
     {"name": "Reuters World", "url": "https://feeds.reuters.com/Reuters/worldNews", "maxItems": 15},
     {"name": "The Verge", "url": "https://www.theverge.com/rss/index.xml", "maxItems": 10},
     {"name": "Hacker News (Top)", "url": "https://hnrss.org/frontpage", "maxItems": 10}
+    {"name": "Techcrunch (Top)", "url": "https://techcrunch.com/feed/", "maxItems": 10}
+    {"name": "ZDNet (Top)", "url": "https://www.zdnet.com/news/rss.xml", "maxItems": 10}
+    {"name": "Engadget (Top)", "url": "engadget.com/rss.xml", "maxItems": 10}
+
   ]
 }
