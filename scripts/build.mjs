@@ -74,18 +74,17 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
   :root {
-    --bg: #06080d;
-    --surface: #0d1117;
-    --card: #111827;
-    --card-hover: #161f2e;
-    --border: rgba(255,255,255,0.06);
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --card-hover: #f1f5f9;
+    --border: rgba(0,0,0,0.08);
     --border-hover: rgba(99,102,241,0.4);
-    --fg: #f1f5f9;
+    --fg: #0f172a;
     --muted: #64748b;
-    --muted-light: #94a3b8;
+    --muted-light: #475569;
     --accent: #6366f1;
-    --accent-glow: rgba(99,102,241,0.15);
-    --desc: #9ca3af;
+    --accent-glow: rgba(99,102,241,0.08);
+    --desc: #475569;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
@@ -102,7 +101,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     position: sticky;
     top: 0;
     z-index: 10;
-    background: rgba(6,8,13,0.85);
+    background: rgba(248,250,252,0.9);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--border);
@@ -113,7 +112,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     padding: 20px 24px;
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: 16px;
     flex-wrap: wrap;
   }
   .brand {
@@ -133,7 +132,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     font-size: 20px;
     font-weight: 700;
     letter-spacing: -0.3px;
-    background: linear-gradient(135deg, #f1f5f9, #94a3b8);
+    background: linear-gradient(135deg, #1e293b, #6366f1);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -142,15 +141,15 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     flex: 1;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     flex-wrap: wrap;
   }
   .updated-badge {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: rgba(99,102,241,0.1);
-    border: 1px solid rgba(99,102,241,0.2);
+    background: rgba(99,102,241,0.07);
+    border: 1px solid rgba(99,102,241,0.18);
     border-radius: 999px;
     padding: 4px 12px;
     font-size: 12px;
@@ -159,13 +158,13 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   }
   .updated-dot {
     width: 6px; height: 6px;
-    background: #34d399;
+    background: #10b981;
     border-radius: 50%;
     animation: pulse 2s ease-in-out infinite;
   }
   @keyframes pulse {
     0%,100% { opacity:1; transform:scale(1); }
-    50% { opacity:.5; transform:scale(.8); }
+    50% { opacity:.4; transform:scale(.8); }
   }
   .sources {
     display: flex;
@@ -174,16 +173,38 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   }
   .pill {
     padding: 3px 10px;
-    border: 1px solid var(--border);
+    border: 1px solid rgba(0,0,0,0.1);
     border-radius: 999px;
     color: var(--muted-light);
     font-size: 11px;
     font-weight: 500;
-    background: rgba(255,255,255,0.03);
+    background: rgba(0,0,0,0.03);
     transition: border-color .2s, color .2s;
     cursor: default;
   }
   .pill:hover { border-color: var(--accent); color: var(--fg); }
+
+  /* ── Add Source button ───────────────────────────── */
+  .btn-add-source {
+    margin-left: auto;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: var(--accent);
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .15s, transform .1s, box-shadow .15s;
+    box-shadow: 0 1px 4px rgba(99,102,241,.3);
+  }
+  .btn-add-source:hover { background: #4f46e5; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(99,102,241,.35); }
+  .btn-add-source:active { transform: none; }
 
   /* ── Main grid ───────────────────────────────────── */
   main {
@@ -191,18 +212,23 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     margin: 0 auto;
     padding: 32px 24px 80px;
   }
-  .grid-header {
+  .section-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 24px;
+    gap: 10px;
+    margin-bottom: 20px;
   }
-  .grid-label {
-    font-size: 13px;
-    font-weight: 500;
+  .section-label {
+    font-size: 12px;
+    font-weight: 600;
     color: var(--muted);
     text-transform: uppercase;
     letter-spacing: .08em;
+  }
+  .section-divider {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
   }
   .grid {
     display: grid;
@@ -220,13 +246,13 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     flex-direction: column;
     gap: 12px;
     transition: background .2s, border-color .25s, transform .2s, box-shadow .25s;
-    cursor: default;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
   }
   .card:hover {
     background: var(--card-hover);
     border-color: var(--border-hover);
     transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(0,0,0,.4), 0 0 0 1px var(--border-hover), 0 4px 16px var(--accent-glow);
+    box-shadow: 0 8px 24px rgba(0,0,0,.08), 0 0 0 1px var(--border-hover), 0 4px 16px var(--accent-glow);
   }
   .card-top {
     display: flex;
@@ -243,16 +269,15 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     text-transform: uppercase;
     flex-shrink: 0;
   }
-  /* Source colours */
-  .src-bbc-world        { background:rgba(187,0,0,.15);   color:#f87171; border:1px solid rgba(187,0,0,.3); }
-  .src-reuters-world    { background:rgba(255,140,0,.12);  color:#fb923c; border:1px solid rgba(255,140,0,.25); }
-  .src-the-verge        { background:rgba(237,100,166,.12);color:#f472b6; border:1px solid rgba(237,100,166,.25); }
-  .src-hacker-news      { background:rgba(255,102,0,.12);  color:#fb923c; border:1px solid rgba(255,102,0,.25); }
-  .src-techcrunch       { background:rgba(16,185,129,.12); color:#34d399; border:1px solid rgba(16,185,129,.25); }
-  .src-zdnet            { background:rgba(96,165,250,.12); color:#60a5fa; border:1px solid rgba(96,165,250,.25); }
-  .src-engadget         { background:rgba(168,85,247,.12); color:#c084fc; border:1px solid rgba(168,85,247,.25); }
-  /* fallback for unknown sources */
-  .source-badge:not([class*=" src-"]) { background:rgba(100,116,139,.12); color:#94a3b8; border:1px solid rgba(100,116,139,.25); }
+  /* Source colours – adjusted for light background */
+  .src-bbc-world        { background:rgba(220,38,38,.08);  color:#dc2626; border:1px solid rgba(220,38,38,.2); }
+  .src-reuters-world    { background:rgba(234,88,12,.08);   color:#ea580c; border:1px solid rgba(234,88,12,.2); }
+  .src-the-verge        { background:rgba(219,39,119,.08);  color:#db2777; border:1px solid rgba(219,39,119,.2); }
+  .src-hacker-news      { background:rgba(234,88,12,.08);   color:#ea580c; border:1px solid rgba(234,88,12,.2); }
+  .src-techcrunch       { background:rgba(5,150,105,.08);   color:#059669; border:1px solid rgba(5,150,105,.2); }
+  .src-zdnet            { background:rgba(37,99,235,.08);   color:#2563eb; border:1px solid rgba(37,99,235,.2); }
+  .src-engadget         { background:rgba(124,58,237,.08);  color:#7c3aed; border:1px solid rgba(124,58,237,.2); }
+  .src-custom-feed      { background:rgba(99,102,241,.08);  color:#4f46e5; border:1px solid rgba(99,102,241,.2); }
   .card-time {
     font-size: 11px;
     color: var(--muted);
@@ -270,7 +295,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     text-decoration: none;
     transition: color .15s;
   }
-  .card h3 a:hover { color: #a5b4fc; }
+  .card h3 a:hover { color: var(--accent); }
   .desc {
     font-size: 13.5px;
     line-height: 1.6;
@@ -281,6 +306,174 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     overflow: hidden;
   }
 
+  /* ── Custom sources section ──────────────────────── */
+  #custom-section { margin-top: 48px; }
+  #custom-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .custom-loading {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 32px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  /* ── Modal ───────────────────────────────────────── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal {
+    background: #fff;
+    border-radius: 20px;
+    padding: 28px;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 24px 64px rgba(0,0,0,.15);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-header h2 { font-size: 18px; font-weight: 700; color: var(--fg); }
+  .modal-close {
+    width: 32px; height: 32px;
+    border: none;
+    background: rgba(0,0,0,0.05);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted);
+    transition: background .15s, color .15s;
+  }
+  .modal-close:hover { background: rgba(0,0,0,0.1); color: var(--fg); }
+  .add-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .form-field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted-light);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+  .form-field input {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--fg);
+    background: #fff;
+    transition: border-color .15s, box-shadow .15s;
+    outline: none;
+  }
+  .form-field input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+  }
+  .form-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  .btn-primary {
+    padding: 8px 18px;
+    background: var(--accent);
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-primary:hover { background: #4f46e5; }
+  .btn-primary:disabled { opacity: .6; cursor: not-allowed; }
+  .btn-secondary {
+    padding: 8px 18px;
+    background: rgba(0,0,0,0.05);
+    color: var(--muted-light);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-secondary:hover { background: rgba(0,0,0,0.09); }
+  .form-error {
+    font-size: 13px;
+    color: #dc2626;
+    background: rgba(220,38,38,.06);
+    border: 1px solid rgba(220,38,38,.15);
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+  /* Saved sources list inside modal */
+  .modal-section-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sources-list { display: flex; flex-direction: column; gap: 8px; }
+  .no-sources { font-size: 13px; color: var(--muted); text-align: center; padding: 12px 0; }
+  .src-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .src-item-info { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+  .src-item-name { font-size: 13px; font-weight: 600; color: var(--fg); }
+  .src-item-url  { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .btn-remove {
+    flex-shrink: 0;
+    padding: 4px 10px;
+    background: rgba(220,38,38,.07);
+    color: #dc2626;
+    border: 1px solid rgba(220,38,38,.15);
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-remove:hover { background: rgba(220,38,38,.14); }
+
   /* ── Footer ──────────────────────────────────────── */
   footer {
     border-top: 1px solid var(--border);
@@ -288,15 +481,14 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     text-align: center;
     font-size: 12px;
     color: var(--muted);
-    max-width: 1200px;
-    margin: 0 auto;
   }
   footer a { color: var(--muted-light); text-decoration: none; }
   footer a:hover { color: var(--fg); }
 
   /* ── Responsive ──────────────────────────────────── */
   @media (max-width: 640px) {
-    .header-inner { padding: 16px; gap: 12px; }
+    .header-inner { padding: 14px 16px; gap: 10px; }
+    .btn-add-source { margin-left: 0; width: 100%; justify-content: center; }
     main { padding: 20px 16px 60px; }
     .grid { grid-template-columns: 1fr; gap: 12px; }
     .header-meta { width: 100%; }
@@ -315,23 +507,250 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
           <span class="updated-dot"></span>
           Updated ${updatedAt}
         </span>
-        <div class="sources">${sourcesList}</div>
+        <div class="sources">
+          ${sourcesList}
+          <span id="custom-pills"></span>
+        </div>
       </div>
+      <button class="btn-add-source" id="open-add">+ Add Source</button>
     </div>
   </header>
+
   <main>
-    <div class="grid-header">
-      <span class="grid-label">Latest Stories</span>
+    <div class="section-header">
+      <span class="section-label">Latest Stories</span>
+      <span class="section-divider"></span>
     </div>
-    <section class="grid">
-      ${cardsHTML}
+    <section class="grid">${cardsHTML}</section>
+
+    <section id="custom-section" hidden>
+      <div class="section-header" style="margin-top:48px">
+        <span class="section-label">My Sources</span>
+        <span class="section-divider"></span>
+      </div>
+      <div class="grid" id="custom-grid"></div>
     </section>
   </main>
+
   <footer>
-    <div class="wrap">
-      Built with <a href="https://pages.github.com" target="_blank" rel="noopener">GitHub Pages</a> &amp; GitHub Actions &nbsp;·&nbsp; No cookies &nbsp;·&nbsp; Links go to original publishers.
-    </div>
+    Built with <a href="https://pages.github.com" target="_blank" rel="noopener">GitHub Pages</a> &amp; GitHub Actions &nbsp;·&nbsp; No cookies &nbsp;·&nbsp; Links go to original publishers.
   </footer>
+
+  <!-- Add Source modal -->
+  <div id="add-modal" class="modal-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-header">
+        <h2 id="modal-title">Add RSS Source</h2>
+        <button class="modal-close" id="modal-close" aria-label="Close">✕</button>
+      </div>
+      <form id="add-form" class="add-form" novalidate>
+        <div class="form-field">
+          <label for="src-name">Source Name</label>
+          <input type="text" id="src-name" placeholder="e.g. Ars Technica" required autocomplete="off"/>
+        </div>
+        <div class="form-field">
+          <label for="src-url">RSS / Atom Feed URL</label>
+          <input type="url" id="src-url" placeholder="https://example.com/feed.xml" required autocomplete="off"/>
+        </div>
+        <p id="add-error" class="form-error" hidden></p>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" id="cancel-btn">Cancel</button>
+          <button type="submit" class="btn-primary" id="add-btn">Add Source</button>
+        </div>
+      </form>
+      <div>
+        <p class="modal-section-label">Saved Sources</p>
+        <div class="sources-list" id="sources-list"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function () {
+  const STORAGE_KEY = 'news-custom-sources-v1';
+
+  function getSources() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+    catch { return []; }
+  }
+  function saveSources(s) { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
+
+  function timeAgo(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    const sec = Math.floor((Date.now() - d.getTime()) / 1000);
+    if (sec < 60) return 'just now';
+    if (sec < 3600) return Math.floor(sec / 60) + 'm ago';
+    if (sec < 86400) return Math.floor(sec / 3600) + 'h ago';
+    return Math.floor(sec / 86400) + 'd ago';
+  }
+
+  async function fetchFeed(url) {
+    const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+    const resp = await fetch(proxy, { signal: AbortSignal.timeout(12000) });
+    if (!resp.ok) throw new Error('Proxy returned ' + resp.status);
+    const data = await resp.json();
+    if (!data.contents) throw new Error('Empty response');
+    const doc = new DOMParser().parseFromString(data.contents, 'text/xml');
+    if (doc.querySelector('parsererror')) throw new Error('Invalid XML — is this really an RSS/Atom feed?');
+    const items = Array.from(doc.querySelectorAll('item, entry')).slice(0, 10);
+    if (!items.length) throw new Error('No items found in feed');
+    return items.map(el => {
+      const title = el.querySelector('title')?.textContent?.trim() || '(untitled)';
+      const linkEl = el.querySelector('link');
+      const link = linkEl?.getAttribute('href') || linkEl?.textContent?.trim() || '#';
+      const rawDesc = el.querySelector('description, summary, content')?.textContent || '';
+      const desc = rawDesc.replace(/<[^>]*>/g, '').replace(/\\s+/g, ' ').trim().slice(0, 220);
+      const dateStr = el.querySelector('pubDate, published, updated')?.textContent || '';
+      return { title, link, desc, dateStr };
+    });
+  }
+
+  function makeCard(item, sourceName) {
+    const art = document.createElement('article');
+    art.className = 'card';
+    const top = document.createElement('div');
+    top.className = 'card-top';
+    const badge = document.createElement('span');
+    badge.className = 'source-badge src-custom-feed';
+    badge.textContent = sourceName;
+    const time = document.createElement('time');
+    time.className = 'card-time';
+    time.textContent = timeAgo(item.dateStr);
+    top.append(badge, time);
+    const h3 = document.createElement('h3');
+    const a = document.createElement('a');
+    a.href = item.link;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.textContent = item.title;
+    h3.append(a);
+    art.append(top, h3);
+    if (item.desc) {
+      const p = document.createElement('p');
+      p.className = 'desc';
+      p.textContent = item.desc;
+      art.append(p);
+    }
+    return art;
+  }
+
+  async function renderCustomFeeds() {
+    const sources = getSources();
+    const section = document.getElementById('custom-section');
+    const grid = document.getElementById('custom-grid');
+    const pillsEl = document.getElementById('custom-pills');
+    if (!section || !grid) return;
+
+    // update header pills
+    if (pillsEl) {
+      pillsEl.innerHTML = '';
+      sources.forEach(s => {
+        const span = document.createElement('span');
+        span.className = 'pill src-custom-feed';
+        span.textContent = s.name;
+        pillsEl.append(span);
+      });
+    }
+
+    if (!sources.length) { section.hidden = true; return; }
+    section.hidden = false;
+    grid.innerHTML = '<p class="custom-loading">Loading your sources…</p>';
+
+    const results = await Promise.all(sources.map(s => fetchFeed(s.url).catch(() => [])));
+    const cards = [];
+    results.forEach((items, i) => items.forEach(it => cards.push({ ...it, _src: sources[i].name, _d: new Date(it.dateStr || 0) })));
+    cards.sort((a, b) => b._d - a._d);
+
+    grid.innerHTML = '';
+    if (!cards.length) {
+      grid.innerHTML = '<p class="custom-loading">Could not load any items. Check your feed URLs.</p>';
+    } else {
+      cards.forEach(c => grid.append(makeCard(c, c._src)));
+    }
+  }
+
+  function refreshSourcesList() {
+    const list = document.getElementById('sources-list');
+    if (!list) return;
+    const sources = getSources();
+    list.innerHTML = '';
+    if (!sources.length) {
+      list.innerHTML = '<p class="no-sources">No custom sources added yet.</p>';
+      return;
+    }
+    sources.forEach((src, i) => {
+      const row = document.createElement('div');
+      row.className = 'src-item';
+      const info = document.createElement('div');
+      info.className = 'src-item-info';
+      const name = document.createElement('span');
+      name.className = 'src-item-name';
+      name.textContent = src.name;
+      const url = document.createElement('span');
+      url.className = 'src-item-url';
+      url.textContent = src.url;
+      info.append(name, url);
+      const btn = document.createElement('button');
+      btn.className = 'btn-remove';
+      btn.textContent = 'Remove';
+      btn.addEventListener('click', () => {
+        const updated = getSources().filter((_, idx) => idx !== i);
+        saveSources(updated);
+        refreshSourcesList();
+        renderCustomFeeds();
+      });
+      row.append(info, btn);
+      list.append(row);
+    });
+  }
+
+  // Modal wiring
+  const modal   = document.getElementById('add-modal');
+  const openBtn = document.getElementById('open-add');
+  const closeBtn= document.getElementById('modal-close');
+  const cancelBtn=document.getElementById('cancel-btn');
+  const form    = document.getElementById('add-form');
+  const errorEl = document.getElementById('add-error');
+  const addBtn  = document.getElementById('add-btn');
+
+  function openModal()  { modal.hidden = false; refreshSourcesList(); document.getElementById('src-name').focus(); }
+  function closeModal() { modal.hidden = true; form.reset(); errorEl.hidden = true; }
+
+  openBtn?.addEventListener('click', openModal);
+  closeBtn?.addEventListener('click', closeModal);
+  cancelBtn?.addEventListener('click', closeModal);
+  modal?.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
+
+  form?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const name = document.getElementById('src-name').value.trim();
+    const url  = document.getElementById('src-url').value.trim();
+    errorEl.hidden = true;
+    addBtn.disabled = true;
+    addBtn.textContent = 'Fetching…';
+    try {
+      await fetchFeed(url); // validate before saving
+      const sources = getSources();
+      sources.push({ name, url });
+      saveSources(sources);
+      form.reset();
+      refreshSourcesList();
+      renderCustomFeeds();
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.hidden = false;
+    } finally {
+      addBtn.disabled = false;
+      addBtn.textContent = 'Add Source';
+    }
+  });
+
+  renderCustomFeeds();
+})();
+</script>
 </body>
 </html>`;
 
