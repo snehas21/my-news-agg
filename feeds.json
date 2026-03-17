@@ -8,6 +8,6 @@
     {"name": "Hacker News (Top)", "url": "https://hnrss.org/frontpage", "maxItems": 10},
     {"name": "Techcrunch (Top)", "url": "https://techcrunch.com/feed/", "maxItems": 10},
     {"name": "ZDNet (Top)", "url": "https://www.zdnet.com/news/rss.xml", "maxItems": 10},
-    {"name": "Engadget (Top)", "url": "engadget.com/rss.xml", "maxItems": 10}
+    {"name": "Engadget (Top)", "url": "https://www.engadget.com/rss.xml", "maxItems": 10}
   ]
 }
