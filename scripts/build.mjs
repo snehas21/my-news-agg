@@ -45,14 +45,32 @@ const humanTime = (dateStr) => {
 
 const sourceSlug = (name) => name.toLowerCase().replace(/[^a-z0-9]/g, "-");
 
+const CATEGORY_RULES = [
+  { key: "business", re: /\b(stocks?|market cap|economy|gdp|inflation|fed |federal reserve|central bank|interest rate|ipo|earnings|revenue|profit|crypto|bitcoin|ethereum|invest\w*|hedge fund|nasdaq|dow jones|s&p|financial|venture capital|acquisition|merger|layoffs?|recession|fiscal|treasury|bonds?|wall street)\b/i },
+  { key: "science",  re: /\b(health|medical|drug|vaccine|cancer|disease|treatment|surgery|hospital|clinical|therapy|covid|pandemic|climate|global warming|space|nasa|spacex|research|scientists?|biology|physics|quantum|asteroid|planet|species|genome|crispr|evolution)\b/i },
+  { key: "world",    re: /\b(war|conflict|ukraine|russia|china|israel|gaza|iran|nato|united nations|european union|election|president|prime minister|parliament|minister|treaty|diplomat\w*|military|troops|ceasefire|protest|sanctions)\b/i },
+  { key: "tech",     re: /\b(ai\b|artificial intelligence|machine learning|software|hardware|\bapp\b|iphone|android|google|apple|microsoft|\bmeta\b|amazon|chip|gpu|cpu|startup|developer|coding|programming|cloud|cybersecurity|data breach|hack\w*|robot\w*|gadget|smartphone|electric vehicle|\bev\b|autonomous|openai|llm|chatgpt|algorithm|data center)\b/i },
+];
+const TECH_SOURCES = new Set(["the verge", "hacker news", "techcrunch", "zdnet", "engadget"]);
+
+const categorize = (title, desc, sourceName) => {
+  const text = (title + " " + (desc || "")).toLowerCase();
+  for (const { key, re } of CATEGORY_RULES) {
+    if (re.test(text)) return key;
+  }
+  if (TECH_SOURCES.has(sourceName.toLowerCase())) return "tech";
+  return "other";
+};
+
 const itemToCard = (it, sourceName) => {
   const title = it.title || "(untitled)";
   const link = it.link || "#";
   const desc = safe(it.contentSnippet || it.content || "");
   const ts = humanTime(it.isoDate || it.pubDate);
   const slug = sourceSlug(sourceName);
+  const cat = categorize(title, desc, sourceName);
   return `
-  <article class="card">
+  <article class="card" data-cat="${cat}">
     <div class="card-top">
       <span class="source-badge src-${slug}">${sourceName}</span>
       <time class="card-time">${ts}</time>
@@ -317,6 +335,44 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     font-size: 14px;
   }
 
+  /* ── Category tabs ───────────────────────────────── */
+  .tabs {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    margin-bottom: 24px;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted-light);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color .15s, color .15s, background .15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .tab:hover { border-color: var(--accent); color: var(--fg); }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tab-count {
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.07);
+    color: var(--muted);
+  }
+  .tab.active .tab-count { background: rgba(255,255,255,0.25); color: #fff; }
+
   /* ── Modal ───────────────────────────────────────── */
   .modal-overlay[hidden] { display: none; }
   .modal-overlay {
@@ -518,11 +574,15 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   </header>
 
   <main>
-    <div class="section-header">
-      <span class="section-label">Latest Stories</span>
-      <span class="section-divider"></span>
-    </div>
-    <section class="grid">${cardsHTML}</section>
+    <nav class="tabs" id="cat-tabs" aria-label="Filter by category">
+      <button class="tab active" data-tab="all">All <span class="tab-count"></span></button>
+      <button class="tab" data-tab="tech">Technology <span class="tab-count"></span></button>
+      <button class="tab" data-tab="world">World <span class="tab-count"></span></button>
+      <button class="tab" data-tab="business">Business <span class="tab-count"></span></button>
+      <button class="tab" data-tab="science">Science &amp; Health <span class="tab-count"></span></button>
+      <button class="tab" data-tab="other">Other <span class="tab-count"></span></button>
+    </nav>
+    <section class="grid" id="main-grid">${cardsHTML}</section>
 
     <section id="custom-section" hidden>
       <div class="section-header" style="margin-top:48px">
@@ -608,9 +668,23 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     });
   }
 
+  // Mirror of server-side categorize — keep in sync
+  const CAT_RULES = [
+    { key: 'business', re: /\b(stocks?|market cap|economy|gdp|inflation|fed |federal reserve|central bank|interest rate|ipo|earnings|revenue|profit|crypto|bitcoin|ethereum|invest\w*|hedge fund|nasdaq|dow jones|s&p|financial|venture capital|acquisition|merger|layoffs?|recession|fiscal|treasury|bonds?|wall street)\b/i },
+    { key: 'science',  re: /\b(health|medical|drug|vaccine|cancer|disease|treatment|surgery|hospital|clinical|therapy|covid|pandemic|climate|global warming|space|nasa|spacex|research|scientists?|biology|physics|quantum|asteroid|planet|species|genome|crispr|evolution)\b/i },
+    { key: 'world',    re: /\b(war|conflict|ukraine|russia|china|israel|gaza|iran|nato|united nations|european union|election|president|prime minister|parliament|minister|treaty|diplomat\w*|military|troops|ceasefire|protest|sanctions)\b/i },
+    { key: 'tech',     re: /\b(ai\b|artificial intelligence|machine learning|software|hardware|\bapp\b|iphone|android|google|apple|microsoft|\bmeta\b|amazon|chip|gpu|cpu|startup|developer|coding|programming|cloud|cybersecurity|data breach|hack\w*|robot\w*|gadget|smartphone|electric vehicle|\bev\b|autonomous|openai|llm|chatgpt|algorithm|data center)\b/i },
+  ];
+  function categorize(title, desc) {
+    const text = (title + ' ' + (desc || '')).toLowerCase();
+    for (const { key, re } of CAT_RULES) { if (re.test(text)) return key; }
+    return 'other';
+  }
+
   function makeCard(item, sourceName) {
     const art = document.createElement('article');
     art.className = 'card';
+    art.dataset.cat = categorize(item.title, item.desc);
     const top = document.createElement('div');
     top.className = 'card-top';
     const badge = document.createElement('span');
@@ -749,7 +823,42 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     }
   });
 
-  renderCustomFeeds();
+  // ── Tab filtering ──────────────────────────────────
+  function allCards() { return document.querySelectorAll('.card[data-cat]'); }
+
+  function updateTabCounts() {
+    const tabs = document.querySelectorAll('[data-tab]');
+    const counts = { all: 0 };
+    allCards().forEach(c => {
+      counts.all++;
+      const cat = c.dataset.cat;
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+    tabs.forEach(tab => {
+      const cat = tab.dataset.tab;
+      const n = counts[cat] || 0;
+      tab.querySelector('.tab-count').textContent = n;
+      if (cat !== 'all') tab.hidden = n === 0;
+    });
+  }
+
+  function initTabs() {
+    const tabs = document.querySelectorAll('[data-tab]');
+    let active = 'all';
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        active = tab.dataset.tab;
+        tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === active));
+        allCards().forEach(c => {
+          c.style.display = (active === 'all' || c.dataset.cat === active) ? '' : 'none';
+        });
+      });
+    });
+    updateTabCounts();
+  }
+
+  initTabs();
+  renderCustomFeeds().then(updateTabCounts);
 })();
 </script>
 </body>
