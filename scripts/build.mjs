@@ -318,6 +318,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   }
 
   /* ── Modal ───────────────────────────────────────── */
+  .modal-overlay[hidden] { display: none; }
   .modal-overlay {
     position: fixed;
     inset: 0;
