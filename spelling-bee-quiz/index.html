@@ -369,6 +369,78 @@
   .shake { animation: shake 0.3s ease; }
   .bounce { animation: bounceIn 0.3s ease; }
 
+  /* ===== MODE SELECTOR ===== */
+  .mode-selector {
+    display: flex;
+    gap: 10px;
+  }
+
+  .mode-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 14px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    cursor: pointer;
+    border: 3px solid #e0e0e0;
+    background: var(--cream);
+    color: #aaa;
+    transition: all 0.2s;
+  }
+
+  .mode-btn.active {
+    border-color: var(--honey);
+    background: var(--honey);
+    color: var(--bee-black);
+  }
+
+  /* ===== PLAYER INDICATOR ===== */
+  .player-indicator {
+    text-align: center;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.2rem;
+    padding: 10px 20px;
+    border-radius: 50px;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .player-indicator.p1 { background: #fff3cd; color: #856404; border: 2px solid var(--honey); }
+  .player-indicator.p2 { background: #cfe2ff; color: #084298; border: 2px solid #90caf9; }
+
+  /* ===== 2P SCORE DISPLAY ===== */
+  .two-player-scores {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .player-score-card {
+    flex: 1;
+    text-align: center;
+    padding: 20px;
+    border-radius: var(--radius);
+    border: 3px solid transparent;
+  }
+
+  .player-score-card.p1 { background: #fff8dc; border-color: var(--honey); }
+  .player-score-card.p2 { background: #e8f0fe; border-color: #90caf9; }
+  .player-score-card.winner { border-width: 4px; box-shadow: 0 0 0 4px rgba(76,175,80,0.2); border-color: var(--green); }
+
+  .player-score-card .ps-name {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    margin-bottom: 6px;
+  }
+
+  .player-score-card .ps-num {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2.8rem;
+    line-height: 1;
+  }
+
+  .player-score-card .ps-label { font-size: 0.8rem; font-weight: 700; color: #777; }
+
   /* ===== EMPTY STATE ===== */
   .empty-state { text-align: center; color: #aaa; padding: 20px; font-weight: 700; }
 
@@ -422,8 +494,17 @@
 
     <div id="tab-play">
       <div class="card honey-border">
+        <div class="section-title">🎮 Game Mode</div>
+        <div class="mode-selector">
+          <button class="mode-btn active" id="mode-1p" onclick="selectMode(1)">👤 1 Player</button>
+          <button class="mode-btn" id="mode-2p" onclick="selectMode(2)">👥 2 Players</button>
+        </div>
+        <br>
         <div class="section-title">👤 Who's playing?</div>
-        <input type="text" class="name-input" id="player-name" placeholder="Enter your name..." maxlength="20">
+        <input type="text" class="name-input" id="player-name" placeholder="Player 1 name..." maxlength="20">
+        <div id="p2-input" style="display:none;margin-top:12px">
+          <input type="text" class="name-input" id="player2-name" placeholder="Player 2 name..." maxlength="20">
+        </div>
         <br><br>
         <button class="btn btn-primary btn-full" onclick="startQuiz()">Start Quiz! 🚀</button>
       </div>
@@ -453,6 +534,7 @@
 
   <!-- QUIZ SCREEN -->
   <div id="screen-quiz" class="screen">
+    <div id="player-indicator" class="player-indicator"></div>
     <div class="quiz-meta">
       <span id="q-counter">Question 1 of 10</span>
       <span id="q-score">Score: 0</span>
@@ -495,10 +577,29 @@
   <!-- RESULTS SCREEN -->
   <div id="screen-results" class="screen">
     <div class="card">
-      <div class="score-circle" id="score-circle">
-        <span class="score-num" id="final-score">0</span>
-        <span class="score-label">out of 10</span>
+      <!-- 1P layout -->
+      <div id="results-1p">
+        <div class="score-circle" id="score-circle">
+          <span class="score-num" id="final-score">0</span>
+          <span class="score-label">out of 10</span>
+        </div>
       </div>
+      <!-- 2P layout -->
+      <div id="results-2p" style="display:none">
+        <div class="two-player-scores">
+          <div class="player-score-card p1" id="result-p1-card">
+            <div class="ps-name" id="result-p1-name">Player 1</div>
+            <div class="ps-num" id="result-p1-score">0</div>
+            <div class="ps-label">out of 5</div>
+          </div>
+          <div class="player-score-card p2" id="result-p2-card">
+            <div class="ps-name" id="result-p2-name">Player 2</div>
+            <div class="ps-num" id="result-p2-score">0</div>
+            <div class="ps-label">out of 5</div>
+          </div>
+        </div>
+      </div>
+
       <div class="result-message" id="result-message">Great job! 🎉</div>
       <p style="text-align:center;color:#777;font-weight:600;margin-bottom:16px" id="result-sub"></p>
 
@@ -930,6 +1031,12 @@ let playerName = '';
 let answered = false;
 let speechSynth = window.speechSynthesis;
 
+// Two-player state
+let gameMode = 1;         // 1 or 2
+let player2Name = '';
+let scores = [0, 0];      // [p1score, p2score]
+let currentPlayer = 0;    // 0 = P1, 1 = P2
+
 // ============================================================
 // STORAGE
 // ============================================================
@@ -1009,12 +1116,30 @@ function shuffle(arr) {
   return a;
 }
 
+function selectMode(mode) {
+  gameMode = mode;
+  document.getElementById('mode-1p').classList.toggle('active', mode === 1);
+  document.getElementById('mode-2p').classList.toggle('active', mode === 2);
+  document.getElementById('p2-input').style.display = mode === 2 ? 'block' : 'none';
+  document.getElementById('player-name').placeholder = mode === 2 ? 'Player 1 name...' : 'Enter your name...';
+}
+
 function startQuiz() {
   const nameInput = document.getElementById('player-name');
-  playerName = (nameInput.value.trim() || 'Player').slice(0, 20);
-  quizWords = shuffle(WORDS).slice(0, 10);
+  playerName = (nameInput.value.trim() || 'Player 1').slice(0, 20);
+
+  if (gameMode === 2) {
+    const p2Input = document.getElementById('player2-name');
+    player2Name = (p2Input.value.trim() || 'Player 2').slice(0, 20);
+    quizWords = shuffle(WORDS).slice(0, 10); // 5 per player, 10 total
+  } else {
+    quizWords = shuffle(WORDS).slice(0, 10);
+  }
+
   currentQ = 0;
   score = 0;
+  scores = [0, 0];
+  currentPlayer = 0;
   answers = [];
   showScreen('screen-quiz');
   loadQuestion();
@@ -1024,8 +1149,20 @@ function loadQuestion() {
   answered = false;
   const w = quizWords[currentQ];
 
+  // Player indicator for 2P mode
+  const indicator = document.getElementById('player-indicator');
+  if (gameMode === 2) {
+    const name = currentPlayer === 0 ? playerName : player2Name;
+    indicator.textContent = `${currentPlayer === 0 ? '👤' : '👥'} ${name}'s turn`;
+    indicator.className = `player-indicator ${currentPlayer === 0 ? 'p1' : 'p2'}`;
+    indicator.style.display = 'block';
+    document.getElementById('q-score').textContent = `${playerName}: ${scores[0]}  |  ${player2Name}: ${scores[1]}`;
+  } else {
+    indicator.style.display = 'none';
+    document.getElementById('q-score').textContent = `Score: ${score}`;
+  }
+
   document.getElementById('q-counter').textContent = `Question ${currentQ + 1} of 10`;
-  document.getElementById('q-score').textContent = `Score: ${score}`;
   document.getElementById('progress-bar').style.width = `${(currentQ / 10) * 100}%`;
 
   const input = document.getElementById('spell-input');
@@ -1106,6 +1243,7 @@ function submitAnswer() {
 
   if (correct) {
     score++;
+    if (gameMode === 2) scores[currentPlayer]++;
     input.classList.add('correct', 'bounce');
     fb.className = 'feedback-banner correct';
     fb.innerHTML = getCorrectMessage();
@@ -1117,13 +1255,19 @@ function submitAnswer() {
     playSound('wrong');
   }
 
-  answers.push({ word: w.word, userAnswer, correct, def: w.def });
-  document.getElementById('q-score').textContent = `Score: ${score}`;
+  answers.push({ word: w.word, userAnswer, correct, def: w.def, player: currentPlayer });
+
+  if (gameMode === 2) {
+    document.getElementById('q-score').textContent = `${playerName}: ${scores[0]}  |  ${player2Name}: ${scores[1]}`;
+  } else {
+    document.getElementById('q-score').textContent = `Score: ${score}`;
+  }
 }
 
 function nextQuestion() {
   speechSynth.cancel();
   currentQ++;
+  if (gameMode === 2) currentPlayer = currentQ % 2;
   if (currentQ >= 10) showResults();
   else loadQuestion();
 }
@@ -1196,33 +1340,79 @@ function playFartSound() {
 // RESULTS
 // ============================================================
 function showResults() {
-  saveScore(playerName, score);
   showScreen('screen-results');
   document.getElementById('progress-bar').style.width = '100%';
 
-  document.getElementById('final-score').textContent = score;
-
-  const pct = score / 10;
+  const breakdown = document.getElementById('results-breakdown');
   let msg, sub;
-  if (pct === 1)    { msg = '🏆 Perfect Score!'; sub = 'You got every single word right!'; }
-  else if (pct >= 0.8) { msg = '🌟 Amazing job!'; sub = 'You\'re ready for the Spelling Bee!'; }
-  else if (pct >= 0.6) { msg = '👍 Good work!'; sub = 'Keep practicing and you\'ll ace it!'; }
-  else if (pct >= 0.4) { msg = '💪 Keep going!'; sub = 'Practice makes perfect!'; }
-  else               { msg = '🐝 Keep buzzing!'; sub = 'Every expert was once a beginner!'; }
+
+  if (gameMode === 2) {
+    // Hide 1P, show 2P layout
+    document.getElementById('results-1p').style.display = 'none';
+    document.getElementById('results-2p').style.display = 'block';
+
+    document.getElementById('result-p1-name').textContent = playerName;
+    document.getElementById('result-p1-score').textContent = scores[0];
+    document.getElementById('result-p2-name').textContent = player2Name;
+    document.getElementById('result-p2-score').textContent = scores[1];
+
+    // Highlight winner
+    document.getElementById('result-p1-card').classList.toggle('winner', scores[0] > scores[1]);
+    document.getElementById('result-p2-card').classList.toggle('winner', scores[1] > scores[0]);
+
+    if (scores[0] > scores[1]) {
+      msg = `🏆 ${playerName} wins!`;
+      sub = `${scores[0]} vs ${scores[1]} — well played!`;
+    } else if (scores[1] > scores[0]) {
+      msg = `🏆 ${player2Name} wins!`;
+      sub = `${scores[1]} vs ${scores[0]} — well played!`;
+    } else {
+      msg = `🤝 It's a tie!`;
+      sub = `${scores[0]} each — neck and neck!`;
+    }
+
+    saveScore(playerName, scores[0]);
+    saveScore(player2Name, scores[1]);
+
+    breakdown.innerHTML = answers.map((a, i) => `
+      <li class="${a.correct ? 'r-correct' : 'r-wrong'}" style="animation-delay:${i*0.05}s">
+        <span class="result-icon">${a.correct ? '✅' : '❌'}</span>
+        <span class="result-word">${a.word}</span>
+        <span style="font-size:0.8rem;color:#888;font-weight:700">${a.player === 0 ? playerName : player2Name}</span>
+        ${!a.correct ? `<span class="result-answer">wrote: "${a.userAnswer}"</span>` : ''}
+      </li>
+    `).join('');
+
+    playSound(scores[0] !== scores[1] ? 'correct' : 'wrong');
+
+  } else {
+    // 1P layout
+    document.getElementById('results-1p').style.display = 'block';
+    document.getElementById('results-2p').style.display = 'none';
+    document.getElementById('final-score').textContent = score;
+
+    const pct = score / 10;
+    if (pct === 1)       { msg = '🏆 Perfect Score!'; sub = 'You got every single word right!'; }
+    else if (pct >= 0.8) { msg = '🌟 Amazing job!'; sub = 'You\'re ready for the Spelling Bee!'; }
+    else if (pct >= 0.6) { msg = '👍 Good work!'; sub = 'Keep practicing and you\'ll ace it!'; }
+    else if (pct >= 0.4) { msg = '💪 Keep going!'; sub = 'Practice makes perfect!'; }
+    else                 { msg = '🐝 Keep buzzing!'; sub = 'Every expert was once a beginner!'; }
+
+    saveScore(playerName, score);
+
+    breakdown.innerHTML = answers.map((a, i) => `
+      <li class="${a.correct ? 'r-correct' : 'r-wrong'}" style="animation-delay:${i*0.05}s">
+        <span class="result-icon">${a.correct ? '✅' : '❌'}</span>
+        <span class="result-word">${a.word}</span>
+        ${!a.correct ? `<span class="result-answer">you wrote: "${a.userAnswer}"</span>` : ''}
+      </li>
+    `).join('');
+
+    playSound(score >= 7 ? 'correct' : 'wrong');
+  }
 
   document.getElementById('result-message').textContent = msg;
   document.getElementById('result-sub').textContent = sub;
-
-  const breakdown = document.getElementById('results-breakdown');
-  breakdown.innerHTML = answers.map((a, i) => `
-    <li class="${a.correct ? 'r-correct' : 'r-wrong'}" style="animation-delay:${i*0.05}s">
-      <span class="result-icon">${a.correct ? '✅' : '❌'}</span>
-      <span class="result-word">${a.word}</span>
-      ${!a.correct ? `<span class="result-answer">you wrote: "${a.userAnswer}"</span>` : ''}
-    </li>
-  `).join('');
-
-  playSound(score >= 7 ? 'correct' : 'wrong');
 }
 
 // ============================================================
