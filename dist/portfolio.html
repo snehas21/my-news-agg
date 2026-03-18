@@ -1,0 +1,892 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>My Portfolio – Stock Tracker</title>
+<meta name="description" content="Personal stock investment portfolio tracker with live prices."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --card-hover: #f1f5f9;
+    --border: rgba(0,0,0,0.08);
+    --border-hover: rgba(99,102,241,0.4);
+    --fg: #0f172a;
+    --muted: #64748b;
+    --muted-light: #475569;
+    --accent: #6366f1;
+    --accent-glow: rgba(99,102,241,0.08);
+    --green: #10b981;
+    --green-bg: rgba(16,185,129,0.08);
+    --green-border: rgba(16,185,129,0.2);
+    --red: #ef4444;
+    --red-bg: rgba(239,68,68,0.08);
+    --red-border: rgba(239,68,68,0.2);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Header ─────────────────────────────────────── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(248,250,252,0.9);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    text-decoration: none;
+  }
+  .brand-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, #10b981, #6366f1);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .brand h1 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    background: linear-gradient(135deg, #1e293b, #10b981);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .nav-link {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted-light);
+    text-decoration: none;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: color .15s, border-color .15s;
+  }
+  .nav-link:hover { color: var(--accent); border-color: var(--accent); }
+  .header-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .last-updated {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .btn-refresh {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: var(--accent);
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .15s, transform .1s;
+    box-shadow: 0 1px 4px rgba(99,102,241,.3);
+  }
+  .btn-refresh:hover { background: #4f46e5; transform: translateY(-1px); }
+  .btn-refresh:active { transform: none; }
+  .btn-refresh:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+  /* ── Summary cards ───────────────────────────────── */
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .summary-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  }
+  .summary-card.profit  { border-color: var(--green-border); background: var(--green-bg); }
+  .summary-card.loss    { border-color: var(--red-border);   background: var(--red-bg);   }
+  .summary-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    margin-bottom: 8px;
+  }
+  .summary-value {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--fg);
+  }
+  .summary-card.profit .summary-value { color: var(--green); }
+  .summary-card.loss   .summary-value { color: var(--red);   }
+  .summary-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* ── Section header ──────────────────────────────── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .section-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    white-space: nowrap;
+  }
+  .section-divider {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .btn-add-holding {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: var(--green);
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .15s, transform .1s;
+    box-shadow: 0 1px 4px rgba(16,185,129,.3);
+  }
+  .btn-add-holding:hover { background: #059669; transform: translateY(-1px); }
+  .btn-add-holding:active { transform: none; }
+
+  /* ── Holdings table ──────────────────────────────── */
+  .table-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead tr {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    padding: 12px 16px;
+    text-align: right;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    white-space: nowrap;
+  }
+  th:first-child { text-align: left; }
+  td {
+    padding: 14px 16px;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  td:first-child { text-align: left; }
+  tr:last-child td { border-bottom: none; }
+  tbody tr { transition: background .15s; }
+  tbody tr:hover { background: var(--card-hover); }
+
+  .ticker-cell { display: flex; flex-direction: column; gap: 2px; }
+  .ticker-sym { font-weight: 700; font-size: 14px; letter-spacing: .03em; }
+  .ticker-name { font-size: 11px; color: var(--muted); }
+
+  .badge-loading {
+    display: inline-block;
+    font-size: 11px;
+    color: var(--muted);
+    background: rgba(0,0,0,0.04);
+    border-radius: 6px;
+    padding: 2px 8px;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+  @keyframes shimmer { 0%,100%{opacity:.6} 50%{opacity:1} }
+
+  .pnl-pos { color: var(--green); font-weight: 600; }
+  .pnl-neg { color: var(--red);   font-weight: 600; }
+
+  .actions-cell { display: flex; gap: 6px; justify-content: flex-end; }
+  .btn-edit, .btn-del {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background .15s;
+  }
+  .btn-edit {
+    background: rgba(99,102,241,.07);
+    color: var(--accent);
+    border-color: rgba(99,102,241,.18);
+  }
+  .btn-edit:hover { background: rgba(99,102,241,.14); }
+  .btn-del {
+    background: rgba(239,68,68,.07);
+    color: var(--red);
+    border-color: rgba(239,68,68,.15);
+  }
+  .btn-del:hover { background: rgba(239,68,68,.14); }
+
+  .empty-state {
+    padding: 60px 24px;
+    text-align: center;
+    color: var(--muted);
+  }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-title { font-size: 16px; font-weight: 600; color: var(--fg); margin-bottom: 6px; }
+  .empty-sub { font-size: 13px; }
+
+  /* ── Error banner ────────────────────────────────── */
+  .price-error {
+    background: rgba(239,68,68,.07);
+    border: 1px solid rgba(239,68,68,.18);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--red);
+    margin-bottom: 20px;
+    display: none;
+  }
+
+  /* ── Modal ───────────────────────────────────────── */
+  .modal-overlay[hidden] { display: none; }
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal {
+    background: #fff;
+    border-radius: 20px;
+    padding: 28px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 24px 64px rgba(0,0,0,.15);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-header h2 { font-size: 18px; font-weight: 700; }
+  .modal-close {
+    width: 32px; height: 32px;
+    border: none;
+    background: rgba(0,0,0,0.05);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted);
+    transition: background .15s;
+  }
+  .modal-close:hover { background: rgba(0,0,0,0.1); color: var(--fg); }
+  .add-form { display: flex; flex-direction: column; gap: 14px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-field { display: flex; flex-direction: column; gap: 5px; }
+  .form-field label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted-light);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+  .form-field input {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--fg);
+    background: #fff;
+    transition: border-color .15s, box-shadow .15s;
+    outline: none;
+  }
+  .form-field input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+  }
+  .form-field .hint {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .form-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  .btn-primary {
+    padding: 8px 18px;
+    background: var(--green);
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-primary:hover { background: #059669; }
+  .btn-secondary {
+    padding: 8px 18px;
+    background: rgba(0,0,0,0.05);
+    color: var(--muted-light);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .btn-secondary:hover { background: rgba(0,0,0,0.09); }
+  .form-error {
+    font-size: 13px;
+    color: var(--red);
+    background: var(--red-bg);
+    border: 1px solid var(--red-border);
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+
+  /* ── Footer ──────────────────────────────────────── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  footer a { color: var(--muted-light); text-decoration: none; }
+  footer a:hover { color: var(--fg); }
+
+  /* ── Responsive ──────────────────────────────────── */
+  @media (max-width: 768px) {
+    .header-inner { padding: 14px 16px; }
+    main { padding: 20px 16px 60px; }
+    .summary-grid { grid-template-columns: 1fr 1fr; }
+    .table-wrap { overflow-x: auto; }
+    table { min-width: 700px; }
+    .form-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 480px) {
+    .summary-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a class="brand" href="index.html">
+      <div class="brand-icon">📈</div>
+      <h1>My Portfolio</h1>
+    </a>
+    <a class="nav-link" href="index.html">← News</a>
+    <div class="header-right">
+      <span class="last-updated" id="last-updated"></span>
+      <button class="btn-refresh" id="btn-refresh">↻ Refresh Prices</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- Summary row -->
+  <div class="summary-grid" id="summary-grid">
+    <div class="summary-card">
+      <div class="summary-label">Holdings</div>
+      <div class="summary-value" id="sum-count">–</div>
+      <div class="summary-sub">positions</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Total Invested</div>
+      <div class="summary-value" id="sum-invested">–</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Market Value</div>
+      <div class="summary-value" id="sum-value">–</div>
+    </div>
+    <div class="summary-card" id="sum-pnl-card">
+      <div class="summary-label">Total P&amp;L</div>
+      <div class="summary-value" id="sum-pnl">–</div>
+      <div class="summary-sub" id="sum-pnl-pct"></div>
+    </div>
+  </div>
+
+  <div id="price-error" class="price-error"></div>
+
+  <!-- Holdings section -->
+  <div class="section-header">
+    <span class="section-label">Holdings</span>
+    <span class="section-divider"></span>
+    <button class="btn-add-holding" id="btn-open-add">+ Add Holding</button>
+  </div>
+
+  <div class="table-wrap">
+    <table id="holdings-table">
+      <thead>
+        <tr>
+          <th>Ticker / Name</th>
+          <th>Shares</th>
+          <th>Avg Price</th>
+          <th>Current Price</th>
+          <th>Cost Basis</th>
+          <th>Market Value</th>
+          <th>P&amp;L $</th>
+          <th>P&amp;L %</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="holdings-body">
+        <!-- filled by JS -->
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<footer>
+  Prices via <a href="https://finance.yahoo.com" target="_blank" rel="noopener">Yahoo Finance</a> &nbsp;·&nbsp;
+  Data stored locally in your browser &nbsp;·&nbsp;
+  <a href="index.html">Back to News</a>
+</footer>
+
+<!-- Add / Edit modal -->
+<div id="holding-modal" class="modal-overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-header">
+      <h2 id="modal-title">Add Holding</h2>
+      <button class="modal-close" id="modal-close">✕</button>
+    </div>
+    <form id="holding-form" class="add-form" novalidate>
+      <div class="form-field">
+        <label for="f-ticker">Ticker Symbol</label>
+        <input type="text" id="f-ticker" placeholder="e.g. AAPL, SPY, BTC-USD" required autocomplete="off"/>
+        <span class="hint">Use Yahoo Finance symbols. Indices: ^GSPC, ^DJI, ^IXIC</span>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label for="f-shares">Shares / Units</label>
+          <input type="number" id="f-shares" placeholder="e.g. 10" min="0.0001" step="any" required/>
+        </div>
+        <div class="form-field">
+          <label for="f-avg-price">Avg. Buy Price ($)</label>
+          <input type="number" id="f-avg-price" placeholder="e.g. 150.00" min="0" step="any" required/>
+        </div>
+      </div>
+      <div class="form-field">
+        <label for="f-label">Custom Label (optional)</label>
+        <input type="text" id="f-label" placeholder="e.g. Apple Inc." autocomplete="off"/>
+      </div>
+      <p id="form-error" class="form-error" hidden></p>
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" id="btn-cancel">Cancel</button>
+        <button type="submit" class="btn-primary" id="btn-save">Add Holding</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const STORAGE_KEY = 'portfolio-holdings-v1';
+
+  /* ── Persistence ──────────────────────────────────── */
+  function load() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+    catch { return []; }
+  }
+  function save(h) { localStorage.setItem(STORAGE_KEY, JSON.stringify(h)); }
+
+  let holdings = load();   // [{ id, ticker, label, shares, avgPrice }]
+  let prices   = {};       // ticker -> { price, name, currency }
+  let editId   = null;
+
+  /* ── Formatting ───────────────────────────────────── */
+  function fmt(n, dec = 2) {
+    if (n == null || isNaN(n)) return '–';
+    return n.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  }
+  function fmtCurrency(n, dec = 2) {
+    if (n == null || isNaN(n)) return '–';
+    return '$' + fmt(n, dec);
+  }
+  function pnlClass(n) { return n >= 0 ? 'pnl-pos' : 'pnl-neg'; }
+  function pnlSign(n)  { return n >= 0 ? '+' : ''; }
+
+  /* ── Yahoo Finance price fetch ────────────────────── */
+  async function fetchPrices(tickers) {
+    if (!tickers.length) return {};
+    const unique = [...new Set(tickers.map(t => t.toUpperCase()))];
+    const yUrl = `https://query2.finance.yahoo.com/v7/finance/quote?symbols=${unique.join(',')}&fields=regularMarketPrice,longName,shortName,currency`;
+    const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(yUrl)}`;
+    const resp = await fetch(proxy, { signal: AbortSignal.timeout(15000) });
+    if (!resp.ok) throw new Error(`Proxy error ${resp.status}`);
+    const outer = await resp.json();
+    if (!outer.contents) throw new Error('Empty proxy response');
+    const data = JSON.parse(outer.contents);
+    const results = data?.quoteResponse?.result || [];
+    const map = {};
+    results.forEach(q => {
+      map[q.symbol.toUpperCase()] = {
+        price:    q.regularMarketPrice,
+        name:     q.longName || q.shortName || q.symbol,
+        currency: q.currency || 'USD',
+      };
+    });
+    return map;
+  }
+
+  /* ── Render summary ───────────────────────────────── */
+  function renderSummary() {
+    const count = holdings.length;
+    let totalInvested = 0, totalValue = 0, hasPrices = false;
+
+    holdings.forEach(h => {
+      const cost = h.shares * h.avgPrice;
+      totalInvested += cost;
+      const p = prices[h.ticker.toUpperCase()];
+      if (p && p.price != null) {
+        totalValue += h.shares * p.price;
+        hasPrices = true;
+      }
+    });
+
+    const pnl = totalValue - totalInvested;
+    const pnlPct = totalInvested > 0 ? (pnl / totalInvested) * 100 : 0;
+
+    document.getElementById('sum-count').textContent = count;
+    document.getElementById('sum-invested').textContent = fmtCurrency(totalInvested);
+    document.getElementById('sum-value').textContent = hasPrices ? fmtCurrency(totalValue) : '–';
+
+    const pnlEl  = document.getElementById('sum-pnl');
+    const pnlPct_El = document.getElementById('sum-pnl-pct');
+    const pnlCard = document.getElementById('sum-pnl-card');
+
+    if (hasPrices) {
+      pnlEl.textContent = pnlSign(pnl) + fmtCurrency(pnl);
+      pnlPct_El.textContent = pnlSign(pnlPct) + fmt(pnlPct) + '%';
+      pnlEl.className = 'summary-value ' + pnlClass(pnl);
+      pnlCard.className = 'summary-card ' + (pnl >= 0 ? 'profit' : 'loss');
+    } else {
+      pnlEl.textContent = '–';
+      pnlPct_El.textContent = '';
+      pnlEl.className = 'summary-value';
+      pnlCard.className = 'summary-card';
+    }
+  }
+
+  /* ── Render table ─────────────────────────────────── */
+  function renderTable() {
+    const tbody = document.getElementById('holdings-body');
+    tbody.innerHTML = '';
+
+    if (!holdings.length) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 9;
+      td.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📊</div>
+          <div class="empty-title">No holdings yet</div>
+          <div class="empty-sub">Click "+ Add Holding" to track your first investment.</div>
+        </div>`;
+      tr.append(td);
+      tbody.append(tr);
+      return;
+    }
+
+    holdings.forEach(h => {
+      const sym = h.ticker.toUpperCase();
+      const p   = prices[sym];
+      const cost = h.shares * h.avgPrice;
+      let currentPrice, marketValue, pnl, pnlPct, nameStr;
+
+      if (p && p.price != null) {
+        currentPrice = p.price;
+        marketValue  = h.shares * currentPrice;
+        pnl          = marketValue - cost;
+        pnlPct       = (pnl / cost) * 100;
+        nameStr      = h.label || p.name || sym;
+      } else {
+        nameStr = h.label || sym;
+      }
+
+      const tr = document.createElement('tr');
+
+      // Ticker cell
+      const tdTicker = document.createElement('td');
+      tdTicker.innerHTML = `<div class="ticker-cell">
+        <span class="ticker-sym">${escHtml(sym)}</span>
+        <span class="ticker-name">${escHtml(nameStr)}</span>
+      </div>`;
+
+      // Shares
+      const tdShares = cell(fmt(h.shares, h.shares % 1 === 0 ? 0 : 4));
+
+      // Avg price
+      const tdAvg = cell(fmtCurrency(h.avgPrice));
+
+      // Current price
+      const tdCur = document.createElement('td');
+      tdCur.style.textAlign = 'right';
+      if (p === undefined) {
+        tdCur.innerHTML = `<span class="badge-loading">Loading…</span>`;
+      } else if (p === null || p.price == null) {
+        tdCur.innerHTML = `<span style="color:var(--muted);font-size:12px">N/A</span>`;
+      } else {
+        tdCur.textContent = fmtCurrency(currentPrice);
+      }
+
+      // Cost basis
+      const tdCost = cell(fmtCurrency(cost));
+
+      // Market value
+      const tdMV = cell(marketValue != null ? fmtCurrency(marketValue) : '–');
+
+      // P&L $
+      const tdPnl = document.createElement('td');
+      tdPnl.style.textAlign = 'right';
+      if (pnl != null) {
+        tdPnl.innerHTML = `<span class="${pnlClass(pnl)}">${pnlSign(pnl)}${fmtCurrency(pnl)}</span>`;
+      } else { tdPnl.textContent = '–'; }
+
+      // P&L %
+      const tdPct = document.createElement('td');
+      tdPct.style.textAlign = 'right';
+      if (pnlPct != null) {
+        tdPct.innerHTML = `<span class="${pnlClass(pnlPct)}">${pnlSign(pnlPct)}${fmt(pnlPct)}%</span>`;
+      } else { tdPct.textContent = '–'; }
+
+      // Actions
+      const tdAct = document.createElement('td');
+      tdAct.innerHTML = `<div class="actions-cell">
+        <button class="btn-edit" data-id="${h.id}">Edit</button>
+        <button class="btn-del" data-id="${h.id}">Remove</button>
+      </div>`;
+
+      tr.append(tdTicker, tdShares, tdAvg, tdCur, tdCost, tdMV, tdPnl, tdPct, tdAct);
+      tbody.append(tr);
+    });
+
+    // Event delegation for edit/delete
+    tbody.querySelectorAll('.btn-edit').forEach(btn => {
+      btn.addEventListener('click', () => openEdit(btn.dataset.id));
+    });
+    tbody.querySelectorAll('.btn-del').forEach(btn => {
+      btn.addEventListener('click', () => removeHolding(btn.dataset.id));
+    });
+  }
+
+  function cell(text) {
+    const td = document.createElement('td');
+    td.style.textAlign = 'right';
+    td.textContent = text;
+    return td;
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ── Price loading ────────────────────────────────── */
+  async function refreshPrices() {
+    const tickers = holdings.map(h => h.ticker.toUpperCase());
+    if (!tickers.length) { renderSummary(); return; }
+
+    const errEl = document.getElementById('price-error');
+    const refreshBtn = document.getElementById('btn-refresh');
+    refreshBtn.disabled = true;
+    refreshBtn.textContent = '↻ Fetching…';
+    errEl.style.display = 'none';
+
+    try {
+      const fetched = await fetchPrices(tickers);
+      // Mark tickers with no result as null (not undefined)
+      tickers.forEach(t => { if (fetched[t] === undefined) fetched[t] = null; });
+      prices = fetched;
+      const now = new Date();
+      document.getElementById('last-updated').textContent =
+        'Prices as of ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      errEl.textContent = 'Could not fetch prices: ' + e.message + '. Showing cost basis only.';
+      errEl.style.display = 'block';
+      tickers.forEach(t => { prices[t] = prices[t] || null; });
+    } finally {
+      refreshBtn.disabled = false;
+      refreshBtn.textContent = '↻ Refresh Prices';
+    }
+
+    renderTable();
+    renderSummary();
+  }
+
+  /* ── CRUD ─────────────────────────────────────────── */
+  function addOrUpdate(data) {
+    if (editId) {
+      const idx = holdings.findIndex(h => h.id === editId);
+      if (idx !== -1) holdings[idx] = { ...holdings[idx], ...data };
+    } else {
+      holdings.push({ id: Date.now().toString(), ...data });
+    }
+    save(holdings);
+  }
+
+  function removeHolding(id) {
+    holdings = holdings.filter(h => h.id !== id);
+    save(holdings);
+    renderTable();
+    renderSummary();
+  }
+
+  /* ── Modal ────────────────────────────────────────── */
+  const modal   = document.getElementById('holding-modal');
+  const form    = document.getElementById('holding-form');
+  const errEl   = document.getElementById('form-error');
+  const saveBtn = document.getElementById('btn-save');
+  const titleEl = document.getElementById('modal-title');
+
+  function openAdd() {
+    editId = null;
+    form.reset();
+    errEl.hidden = true;
+    titleEl.textContent = 'Add Holding';
+    saveBtn.textContent = 'Add Holding';
+    modal.hidden = false;
+    document.getElementById('f-ticker').focus();
+  }
+
+  function openEdit(id) {
+    const h = holdings.find(h => h.id === id);
+    if (!h) return;
+    editId = id;
+    document.getElementById('f-ticker').value    = h.ticker;
+    document.getElementById('f-shares').value    = h.shares;
+    document.getElementById('f-avg-price').value = h.avgPrice;
+    document.getElementById('f-label').value     = h.label || '';
+    errEl.hidden = true;
+    titleEl.textContent = 'Edit Holding';
+    saveBtn.textContent = 'Save Changes';
+    modal.hidden = false;
+    document.getElementById('f-ticker').focus();
+  }
+
+  function closeModal() {
+    modal.hidden = true;
+    editId = null;
+    form.reset();
+  }
+
+  document.getElementById('btn-open-add').addEventListener('click', openAdd);
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.getElementById('btn-cancel').addEventListener('click', closeModal);
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    errEl.hidden = true;
+
+    const ticker   = document.getElementById('f-ticker').value.trim().toUpperCase();
+    const shares   = parseFloat(document.getElementById('f-shares').value);
+    const avgPrice = parseFloat(document.getElementById('f-avg-price').value);
+    const label    = document.getElementById('f-label').value.trim();
+
+    if (!ticker) { showErr('Ticker symbol is required.'); return; }
+    if (!shares || shares <= 0) { showErr('Shares must be a positive number.'); return; }
+    if (!avgPrice || avgPrice < 0) { showErr('Avg. buy price must be a non-negative number.'); return; }
+
+    addOrUpdate({ ticker, shares, avgPrice, label });
+    closeModal();
+
+    // Re-render immediately with existing prices, then fetch new ones
+    renderTable();
+    renderSummary();
+    await refreshPrices();
+  });
+
+  function showErr(msg) {
+    errEl.textContent = msg;
+    errEl.hidden = false;
+  }
+
+  /* ── Refresh button ───────────────────────────────── */
+  document.getElementById('btn-refresh').addEventListener('click', refreshPrices);
+
+  /* ── Init ─────────────────────────────────────────── */
+  renderTable();
+  renderSummary();
+  if (holdings.length) refreshPrices();
+})();
+</script>
+</body>
+</html>
