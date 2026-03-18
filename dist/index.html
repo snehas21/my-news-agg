@@ -1,86 +1,4 @@
-import fs from "fs/promises";
-import path from "path";
-import Parser from "rss-parser";
-import sanitizeHtml from "sanitize-html";
-import { DateTime } from "luxon";
-
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
-const ROOT = path.resolve(__dirname, "..");
-const DIST = path.join(ROOT, "dist");
-
-const parser = new Parser({
-  timeout: 15000,
-  customFields: { item: ["category", "categories"] }
-});
-
-const safe = (html) =>
-  sanitizeHtml(html || "", {
-    allowedTags: ["b","i","em","strong","a","code","pre","br","p","ul","ol","li","blockquote","img"],
-    allowedAttributes: { a: ["href", "title", "target", "rel"], img: ["src", "alt"] },
-    transformTags: { a: sanitizeHtml.simpleTransform("a", { target: "_blank", rel: "noopener noreferrer" }) }
-  });
-
-const readJSON = async (p) => JSON.parse(await fs.readFile(p, "utf8"));
-const writeFile = (p, c) => fs.writeFile(p, c, "utf8");
-
-const ensureDir = async (d) => fs.mkdir(d, { recursive: true });
-
-const byPubDateDesc = (a, b) => new Date(b.isoDate || b.pubDate || 0) - new Date(a.isoDate || a.pubDate || 0);
-
-const dedupe = (items) => {
-  const seen = new Set();
-  return items.filter((it) => {
-    const key = (it.link || "").split("?")[0];
-    if (!key || seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-};
-
-const humanTime = (dateStr) => {
-  const dt = DateTime.fromJSDate(new Date(dateStr));
-  if (!dt.isValid) return "";
-  return dt.toRelative({ base: DateTime.now() }) || dt.toFormat("yyyy-LL-dd HH:mm ZZZZ");
-};
-
-const sourceSlug = (name) => name.toLowerCase().replace(/[^a-z0-9]/g, "-");
-
-const CATEGORY_RULES = [
-  { key: "business", re: /\b(stocks?|market cap|economy|gdp|inflation|fed |federal reserve|central bank|interest rate|ipo|earnings|revenue|profit|crypto|bitcoin|ethereum|invest\w*|hedge fund|nasdaq|dow jones|s&p|financial|venture capital|acquisition|merger|layoffs?|recession|fiscal|treasury|bonds?|wall street)\b/i },
-  { key: "science",  re: /\b(health|medical|drug|vaccine|cancer|disease|treatment|surgery|hospital|clinical|therapy|covid|pandemic|climate|global warming|space|nasa|spacex|research|scientists?|biology|physics|quantum|asteroid|planet|species|genome|crispr|evolution)\b/i },
-  { key: "world",    re: /\b(war|conflict|ukraine|russia|china|israel|gaza|iran|nato|united nations|european union|election|president|prime minister|parliament|minister|treaty|diplomat\w*|military|troops|ceasefire|protest|sanctions)\b/i },
-  { key: "tech",     re: /\b(ai\b|artificial intelligence|machine learning|software|hardware|\bapp\b|iphone|android|google|apple|microsoft|\bmeta\b|amazon|chip|gpu|cpu|startup|developer|coding|programming|cloud|cybersecurity|data breach|hack\w*|robot\w*|gadget|smartphone|electric vehicle|\bev\b|autonomous|openai|llm|chatgpt|algorithm|data center)\b/i },
-];
-const TECH_SOURCES = new Set(["the verge", "hacker news", "techcrunch", "zdnet", "engadget"]);
-
-const categorize = (title, desc, sourceName) => {
-  const text = (title + " " + (desc || "")).toLowerCase();
-  for (const { key, re } of CATEGORY_RULES) {
-    if (re.test(text)) return key;
-  }
-  if (TECH_SOURCES.has(sourceName.toLowerCase())) return "tech";
-  return "other";
-};
-
-const itemToCard = (it, sourceName) => {
-  const title = it.title || "(untitled)";
-  const link = it.link || "#";
-  const desc = safe(it.contentSnippet || it.content || "");
-  const ts = humanTime(it.isoDate || it.pubDate);
-  const slug = sourceSlug(sourceName);
-  const cat = categorize(title, desc, sourceName);
-  return `
-  <article class="card" data-cat="${cat}">
-    <div class="card-top">
-      <span class="source-badge src-${slug}">${sourceName}</span>
-      <time class="card-time">${ts}</time>
-    </div>
-    <h3><a href="${link}" target="_blank" rel="noopener">${title}</a></h3>
-    ${desc ? `<p class="desc">${desc}</p>` : ""}
-  </article>`;
-};
-
-const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
@@ -562,10 +480,10 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
       <div class="header-meta">
         <span class="updated-badge">
           <span class="updated-dot"></span>
-          Updated ${updatedAt}
+          Updated 2026-03-18 01:30 UTC
         </span>
         <div class="sources">
-          ${sourcesList}
+          <span class="pill src-bbc-world">BBC World</span><span class="pill src-reuters-world">Reuters World</span><span class="pill src-the-verge">The Verge</span><span class="pill src-hacker-news--top-">Hacker News (Top)</span><span class="pill src-techcrunch--top-">Techcrunch (Top)</span><span class="pill src-zdnet--top-">ZDNet (Top)</span><span class="pill src-engadget--top-">Engadget (Top)</span>
           <span id="custom-pills"></span>
         </div>
       </div>
@@ -582,7 +500,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
       <button class="tab" data-tab="science">Science &amp; Health <span class="tab-count"></span></button>
       <button class="tab" data-tab="other">Other <span class="tab-count"></span></button>
     </nav>
-    <section class="grid" id="main-grid">${cardsHTML}</section>
+    <section class="grid" id="main-grid"></section>
 
     <section id="custom-section" hidden>
       <div class="section-header" style="margin-top:48px">
@@ -662,7 +580,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
       const linkEl = el.querySelector('link');
       const link = linkEl?.getAttribute('href') || linkEl?.textContent?.trim() || '#';
       const rawDesc = el.querySelector('description, summary, content')?.textContent || '';
-      const desc = rawDesc.replace(/<[^>]*>/g, '').replace(/\\s+/g, ' ').trim().slice(0, 220);
+      const desc = rawDesc.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 220);
       const dateStr = el.querySelector('pubDate, published, updated')?.textContent || '';
       return { title, link, desc, dateStr };
     });
@@ -670,10 +588,10 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
 
   // Mirror of server-side categorize — keep in sync
   const CAT_RULES = [
-    { key: 'business', re: /\b(stocks?|market cap|economy|gdp|inflation|fed |federal reserve|central bank|interest rate|ipo|earnings|revenue|profit|crypto|bitcoin|ethereum|invest\w*|hedge fund|nasdaq|dow jones|s&p|financial|venture capital|acquisition|merger|layoffs?|recession|fiscal|treasury|bonds?|wall street)\b/i },
-    { key: 'science',  re: /\b(health|medical|drug|vaccine|cancer|disease|treatment|surgery|hospital|clinical|therapy|covid|pandemic|climate|global warming|space|nasa|spacex|research|scientists?|biology|physics|quantum|asteroid|planet|species|genome|crispr|evolution)\b/i },
-    { key: 'world',    re: /\b(war|conflict|ukraine|russia|china|israel|gaza|iran|nato|united nations|european union|election|president|prime minister|parliament|minister|treaty|diplomat\w*|military|troops|ceasefire|protest|sanctions)\b/i },
-    { key: 'tech',     re: /\b(ai\b|artificial intelligence|machine learning|software|hardware|\bapp\b|iphone|android|google|apple|microsoft|\bmeta\b|amazon|chip|gpu|cpu|startup|developer|coding|programming|cloud|cybersecurity|data breach|hack\w*|robot\w*|gadget|smartphone|electric vehicle|\bev\b|autonomous|openai|llm|chatgpt|algorithm|data center)\b/i },
+    { key: 'business', re: /(stocks?|market cap|economy|gdp|inflation|fed |federal reserve|central bank|interest rate|ipo|earnings|revenue|profit|crypto|bitcoin|ethereum|investw*|hedge fund|nasdaq|dow jones|s&p|financial|venture capital|acquisition|merger|layoffs?|recession|fiscal|treasury|bonds?|wall street)/i },
+    { key: 'science',  re: /(health|medical|drug|vaccine|cancer|disease|treatment|surgery|hospital|clinical|therapy|covid|pandemic|climate|global warming|space|nasa|spacex|research|scientists?|biology|physics|quantum|asteroid|planet|species|genome|crispr|evolution)/i },
+    { key: 'world',    re: /(war|conflict|ukraine|russia|china|israel|gaza|iran|nato|united nations|european union|election|president|prime minister|parliament|minister|treaty|diplomatw*|military|troops|ceasefire|protest|sanctions)/i },
+    { key: 'tech',     re: /(ai|artificial intelligence|machine learning|software|hardware|app|iphone|android|google|apple|microsoft|meta|amazon|chip|gpu|cpu|startup|developer|coding|programming|cloud|cybersecurity|data breach|hackw*|robotw*|gadget|smartphone|electric vehicle|ev|autonomous|openai|llm|chatgpt|algorithm|data center)/i },
   ];
   function categorize(title, desc) {
     const text = (title + ' ' + (desc || '')).toLowerCase();
@@ -862,32 +780,4 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
 })();
 </script>
 </body>
-</html>`;
-
-const sourcePill = (name) => `<span class="pill src-${sourceSlug(name)}">${name}</span>`;
-
-(async () => {
-  await ensureDir(DIST);
-  const { sources } = await readJSON(path.join(ROOT, "feeds.json"));
-
-  let all = [];
-  for (const src of sources) {
-    try {
-      const feed = await parser.parseURL(src.url);
-      const items = (feed.items || []).slice(0, src.maxItems || 10).map(it => ({ ...it, _source: src.name }));
-      all.push(...items);
-    } catch (e) {
-      console.error("Failed:", src.url, e.message);
-    }
-  }
-
-  all = dedupe(all).sort(byPubDateDesc);
-
-  const cards = all.map(it => itemToCard(it, it._source)).join("\n");
-  const updatedAt = DateTime.now().toFormat("yyyy-LL-dd HH:mm ZZZZ");
-  const sourcesHTML = sources.map(s => sourcePill(s.name)).join("");
-
-  const html = pageTemplate(cards, updatedAt, sourcesHTML);
-  await writeFile(path.join(DIST, "index.html"), html);
-  console.log(`Wrote ${all.length} items to dist/index.html`);
-})();
+</html>
