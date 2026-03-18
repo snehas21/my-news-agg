@@ -576,7 +576,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   <main>
     <nav class="tabs" id="cat-tabs" aria-label="Filter by category">
       <button class="tab active" data-tab="all">All <span class="tab-count"></span></button>
-      <button class="tab" data-tab="tech">Technology <span class="tab-count"></span></button>
+      <button class="tab" data-tab="tech">Tech1 <span class="tab-count"></span></button>
       <button class="tab" data-tab="world">World <span class="tab-count"></span></button>
       <button class="tab" data-tab="business">Business <span class="tab-count"></span></button>
       <button class="tab" data-tab="science">Science &amp; Health <span class="tab-count"></span></button>
