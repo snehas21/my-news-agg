@@ -202,29 +202,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   }
   .pill:hover { border-color: var(--accent); color: var(--fg); }
 
-  /* ── Add Source button ───────────────────────────── */
-  .btn-add-source {
-    margin-left: auto;
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 7px 14px;
-    background: var(--accent);
-    color: #fff;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 600;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background .15s, transform .1s, box-shadow .15s;
-    box-shadow: 0 1px 4px rgba(99,102,241,.3);
-  }
-  .btn-add-source:hover { background: #4f46e5; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(99,102,241,.35); }
-  .btn-add-source:active { transform: none; }
-
-  /* ── Main grid ───────────────────────────────────── */
+/* ── Main grid ───────────────────────────────────── */
   main {
     max-width: 1200px;
     margin: 0 auto;
@@ -545,8 +523,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   /* ── Responsive ──────────────────────────────────── */
   @media (max-width: 640px) {
     .header-inner { padding: 14px 16px; gap: 10px; }
-    .btn-add-source { margin-left: 0; width: 100%; justify-content: center; }
-    main { padding: 20px 16px 60px; }
+main { padding: 20px 16px 60px; }
     .grid { grid-template-columns: 1fr; gap: 12px; }
     .header-meta { width: 100%; }
   }
@@ -566,10 +543,8 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
         </span>
         <div class="sources">
           ${sourcesList}
-          <span id="custom-pills"></span>
         </div>
       </div>
-      <button class="btn-add-source" id="open-add">+ Add Source</button>
     </div>
   </header>
 
@@ -584,245 +559,15 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     </nav>
     <section class="grid" id="main-grid">${cardsHTML}</section>
 
-    <section id="custom-section" hidden>
-      <div class="section-header" style="margin-top:48px">
-        <span class="section-label">My Sources</span>
-        <span class="section-divider"></span>
-      </div>
-      <div class="grid" id="custom-grid"></div>
-    </section>
   </main>
 
   <footer>
     Built with <a href="https://pages.github.com" target="_blank" rel="noopener">GitHub Pages</a> &amp; GitHub Actions &nbsp;·&nbsp; No cookies &nbsp;·&nbsp; Links go to original publishers.
   </footer>
 
-  <!-- Add Source modal -->
-  <div id="add-modal" class="modal-overlay" hidden>
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <div class="modal-header">
-        <h2 id="modal-title">Add RSS Source</h2>
-        <button class="modal-close" id="modal-close" aria-label="Close">✕</button>
-      </div>
-      <form id="add-form" class="add-form" novalidate>
-        <div class="form-field">
-          <label for="src-name">Source Name</label>
-          <input type="text" id="src-name" placeholder="e.g. Ars Technica" required autocomplete="off"/>
-        </div>
-        <div class="form-field">
-          <label for="src-url">RSS / Atom Feed URL</label>
-          <input type="url" id="src-url" placeholder="https://example.com/feed.xml" required autocomplete="off"/>
-        </div>
-        <p id="add-error" class="form-error" hidden></p>
-        <div class="form-actions">
-          <button type="button" class="btn-secondary" id="cancel-btn">Cancel</button>
-          <button type="submit" class="btn-primary" id="add-btn">Add Source</button>
-        </div>
-      </form>
-      <div>
-        <p class="modal-section-label">Saved Sources</p>
-        <div class="sources-list" id="sources-list"></div>
-      </div>
-    </div>
-  </div>
 
 <script>
 (function () {
-  const STORAGE_KEY = 'news-custom-sources-v1';
-
-  function getSources() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
-    catch { return []; }
-  }
-  function saveSources(s) { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
-
-  function timeAgo(dateStr) {
-    if (!dateStr) return '';
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return '';
-    const sec = Math.floor((Date.now() - d.getTime()) / 1000);
-    if (sec < 60) return 'just now';
-    if (sec < 3600) return Math.floor(sec / 60) + 'm ago';
-    if (sec < 86400) return Math.floor(sec / 3600) + 'h ago';
-    return Math.floor(sec / 86400) + 'd ago';
-  }
-
-  async function fetchFeed(url) {
-    const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
-    const resp = await fetch(proxy, { signal: AbortSignal.timeout(12000) });
-    if (!resp.ok) throw new Error('Proxy returned ' + resp.status);
-    const data = await resp.json();
-    if (!data.contents) throw new Error('Empty response');
-    const doc = new DOMParser().parseFromString(data.contents, 'text/xml');
-    if (doc.querySelector('parsererror')) throw new Error('Invalid XML — is this really an RSS/Atom feed?');
-    const items = Array.from(doc.querySelectorAll('item, entry')).slice(0, 10);
-    if (!items.length) throw new Error('No items found in feed');
-    return items.map(el => {
-      const title = el.querySelector('title')?.textContent?.trim() || '(untitled)';
-      const linkEl = el.querySelector('link');
-      const link = linkEl?.getAttribute('href') || linkEl?.textContent?.trim() || '#';
-      const rawDesc = el.querySelector('description, summary, content')?.textContent || '';
-      const desc = rawDesc.replace(/<[^>]*>/g, '').replace(/\\s+/g, ' ').trim().slice(0, 220);
-      const dateStr = el.querySelector('pubDate, published, updated')?.textContent || '';
-      return { title, link, desc, dateStr };
-    });
-  }
-
-  // Mirror of server-side categorize — keep in sync
-  const CAT_RULES = [
-    { key: 'business', re: /\b(stocks?|market cap|economy|gdp|inflation|fed |federal reserve|central bank|interest rate|ipo|earnings|revenue|profit|crypto|bitcoin|ethereum|invest\w*|hedge fund|nasdaq|dow jones|s&p|financial|venture capital|acquisition|merger|layoffs?|recession|fiscal|treasury|bonds?|wall street)\b/i },
-    { key: 'science',  re: /\b(health|medical|drug|vaccine|cancer|disease|treatment|surgery|hospital|clinical|therapy|covid|pandemic|climate|global warming|space|nasa|spacex|research|scientists?|biology|physics|quantum|asteroid|planet|species|genome|crispr|evolution)\b/i },
-    { key: 'world',    re: /\b(war|conflict|ukraine|russia|china|israel|gaza|iran|nato|united nations|european union|election|president|prime minister|parliament|minister|treaty|diplomat\w*|military|troops|ceasefire|protest|sanctions)\b/i },
-    { key: 'tech',     re: /\b(ai\b|artificial intelligence|machine learning|software|hardware|\bapp\b|iphone|android|google|apple|microsoft|\bmeta\b|amazon|chip|gpu|cpu|startup|developer|coding|programming|cloud|cybersecurity|data breach|hack\w*|robot\w*|gadget|smartphone|electric vehicle|\bev\b|autonomous|openai|llm|chatgpt|algorithm|data center)\b/i },
-  ];
-  function categorize(title, desc) {
-    const text = (title + ' ' + (desc || '')).toLowerCase();
-    for (const { key, re } of CAT_RULES) { if (re.test(text)) return key; }
-    return 'other';
-  }
-
-  function makeCard(item, sourceName) {
-    const art = document.createElement('article');
-    art.className = 'card';
-    art.dataset.cat = categorize(item.title, item.desc);
-    const top = document.createElement('div');
-    top.className = 'card-top';
-    const badge = document.createElement('span');
-    badge.className = 'source-badge src-custom-feed';
-    badge.textContent = sourceName;
-    const time = document.createElement('time');
-    time.className = 'card-time';
-    time.textContent = timeAgo(item.dateStr);
-    top.append(badge, time);
-    const h3 = document.createElement('h3');
-    const a = document.createElement('a');
-    a.href = item.link;
-    a.target = '_blank';
-    a.rel = 'noopener';
-    a.textContent = item.title;
-    h3.append(a);
-    art.append(top, h3);
-    if (item.desc) {
-      const p = document.createElement('p');
-      p.className = 'desc';
-      p.textContent = item.desc;
-      art.append(p);
-    }
-    return art;
-  }
-
-  async function renderCustomFeeds() {
-    const sources = getSources();
-    const section = document.getElementById('custom-section');
-    const grid = document.getElementById('custom-grid');
-    const pillsEl = document.getElementById('custom-pills');
-    if (!section || !grid) return;
-
-    // update header pills
-    if (pillsEl) {
-      pillsEl.innerHTML = '';
-      sources.forEach(s => {
-        const span = document.createElement('span');
-        span.className = 'pill src-custom-feed';
-        span.textContent = s.name;
-        pillsEl.append(span);
-      });
-    }
-
-    if (!sources.length) { section.hidden = true; return; }
-    section.hidden = false;
-    grid.innerHTML = '<p class="custom-loading">Loading your sources…</p>';
-
-    const results = await Promise.all(sources.map(s => fetchFeed(s.url).catch(() => [])));
-    const cards = [];
-    results.forEach((items, i) => items.forEach(it => cards.push({ ...it, _src: sources[i].name, _d: new Date(it.dateStr || 0) })));
-    cards.sort((a, b) => b._d - a._d);
-
-    grid.innerHTML = '';
-    if (!cards.length) {
-      grid.innerHTML = '<p class="custom-loading">Could not load any items. Check your feed URLs.</p>';
-    } else {
-      cards.forEach(c => grid.append(makeCard(c, c._src)));
-    }
-  }
-
-  function refreshSourcesList() {
-    const list = document.getElementById('sources-list');
-    if (!list) return;
-    const sources = getSources();
-    list.innerHTML = '';
-    if (!sources.length) {
-      list.innerHTML = '<p class="no-sources">No custom sources added yet.</p>';
-      return;
-    }
-    sources.forEach((src, i) => {
-      const row = document.createElement('div');
-      row.className = 'src-item';
-      const info = document.createElement('div');
-      info.className = 'src-item-info';
-      const name = document.createElement('span');
-      name.className = 'src-item-name';
-      name.textContent = src.name;
-      const url = document.createElement('span');
-      url.className = 'src-item-url';
-      url.textContent = src.url;
-      info.append(name, url);
-      const btn = document.createElement('button');
-      btn.className = 'btn-remove';
-      btn.textContent = 'Remove';
-      btn.addEventListener('click', () => {
-        const updated = getSources().filter((_, idx) => idx !== i);
-        saveSources(updated);
-        refreshSourcesList();
-        renderCustomFeeds();
-      });
-      row.append(info, btn);
-      list.append(row);
-    });
-  }
-
-  // Modal wiring
-  const modal   = document.getElementById('add-modal');
-  const openBtn = document.getElementById('open-add');
-  const closeBtn= document.getElementById('modal-close');
-  const cancelBtn=document.getElementById('cancel-btn');
-  const form    = document.getElementById('add-form');
-  const errorEl = document.getElementById('add-error');
-  const addBtn  = document.getElementById('add-btn');
-
-  function openModal()  { modal.hidden = false; refreshSourcesList(); document.getElementById('src-name').focus(); }
-  function closeModal() { modal.hidden = true; form.reset(); errorEl.hidden = true; }
-
-  openBtn?.addEventListener('click', openModal);
-  closeBtn?.addEventListener('click', closeModal);
-  cancelBtn?.addEventListener('click', closeModal);
-  modal?.addEventListener('click', e => { if (e.target === modal) closeModal(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
-
-  form?.addEventListener('submit', async e => {
-    e.preventDefault();
-    const name = document.getElementById('src-name').value.trim();
-    const url  = document.getElementById('src-url').value.trim();
-    errorEl.hidden = true;
-    addBtn.disabled = true;
-    addBtn.textContent = 'Fetching…';
-    try {
-      await fetchFeed(url); // validate before saving
-      const sources = getSources();
-      sources.push({ name, url });
-      saveSources(sources);
-      form.reset();
-      refreshSourcesList();
-      renderCustomFeeds();
-    } catch (err) {
-      errorEl.textContent = err.message;
-      errorEl.hidden = false;
-    } finally {
-      addBtn.disabled = false;
-      addBtn.textContent = 'Add Source';
-    }
-  });
-
   // ── Tab filtering ──────────────────────────────────
   function allCards() { return document.querySelectorAll('.card[data-cat]'); }
 
@@ -858,7 +603,6 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   }
 
   initTabs();
-  renderCustomFeeds().then(updateTabCounts);
 })();
 </script>
 </body>
