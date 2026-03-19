@@ -307,17 +307,89 @@
 
   /* ── Modal ───────────────────────────────────────── */
   .modal-overlay {
-    display: none; /* hidden by default; JS sets display:flex to open */
+    display: none; /* JS sets display:flex to open */
     position: fixed;
     inset: 0;
     background: rgba(15,23,42,0.45);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     z-index: 100;
-    display: flex;
     align-items: center;
     justify-content: center;
     padding: 16px;
+  }
+
+  /* ── News ────────────────────────────────────────── */
+  .news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+  }
+  .news-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    transition: border-color .2s, transform .15s, box-shadow .2s;
+  }
+  .news-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,.07);
+  }
+  .news-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .news-ticker-badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(99,102,241,.09);
+    color: var(--accent);
+    border: 1px solid rgba(99,102,241,.2);
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .news-time {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .news-card h3 {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.45;
+  }
+  .news-card h3 a {
+    color: var(--fg);
+    text-decoration: none;
+    transition: color .15s;
+  }
+  .news-card h3 a:hover { color: var(--accent); }
+  .news-desc {
+    font-size: 12.5px;
+    color: var(--muted-light);
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .news-loading {
+    grid-column: 1/-1;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 24px;
   }
   .modal {
     background: #fff;
@@ -510,6 +582,15 @@
       </tbody>
     </table>
   </div>
+
+  <!-- News section -->
+  <div id="news-section" style="display:none; margin-top:40px">
+    <div class="section-header">
+      <span class="section-label">Portfolio News</span>
+      <span class="section-divider"></span>
+    </div>
+    <div class="news-grid" id="news-grid"></div>
+  </div>
 </main>
 
 <footer>
@@ -583,27 +664,92 @@
   function pnlClass(n) { return n >= 0 ? 'pnl-pos' : 'pnl-neg'; }
   function pnlSign(n)  { return n >= 0 ? '+' : ''; }
 
-  /* ── Yahoo Finance price fetch ────────────────────── */
+  /* ── Helpers ──────────────────────────────────────── */
+  function timeAgo(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d)) return '';
+    const sec = Math.floor((Date.now() - d) / 1000);
+    if (sec < 60)   return 'just now';
+    if (sec < 3600) return Math.floor(sec / 60) + 'm ago';
+    if (sec < 86400) return Math.floor(sec / 3600) + 'h ago';
+    return Math.floor(sec / 86400) + 'd ago';
+  }
+
+  async function proxyFetch(url) {
+    const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const resp = await fetch(proxy, { signal: AbortSignal.timeout(14000) });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const outer = await resp.json();
+    if (!outer.contents) throw new Error('Empty response');
+    return outer.contents;
+  }
+
+  /* ── Yahoo Finance price fetch (v8 chart, one per ticker) ── */
   async function fetchPrices(tickers) {
     if (!tickers.length) return {};
     const unique = [...new Set(tickers.map(t => t.toUpperCase()))];
-    const yUrl = `https://query2.finance.yahoo.com/v7/finance/quote?symbols=${unique.join(',')}&fields=regularMarketPrice,longName,shortName,currency`;
-    const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(yUrl)}`;
-    const resp = await fetch(proxy, { signal: AbortSignal.timeout(15000) });
-    if (!resp.ok) throw new Error(`Proxy error ${resp.status}`);
-    const outer = await resp.json();
-    if (!outer.contents) throw new Error('Empty proxy response');
-    const data = JSON.parse(outer.contents);
-    const results = data?.quoteResponse?.result || [];
+    const settled = await Promise.allSettled(unique.map(async ticker => {
+      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=1d`;
+      const contents = await proxyFetch(url);
+      const data = JSON.parse(contents);
+      const meta = data?.chart?.result?.[0]?.meta;
+      if (!meta || meta.regularMarketPrice == null) throw new Error('No price data');
+      return { ticker, price: meta.regularMarketPrice,
+               name: meta.longName || meta.shortName || ticker,
+               currency: meta.currency || 'USD' };
+    }));
     const map = {};
-    results.forEach(q => {
-      map[q.symbol.toUpperCase()] = {
-        price:    q.regularMarketPrice,
-        name:     q.longName || q.shortName || q.symbol,
-        currency: q.currency || 'USD',
-      };
+    settled.forEach((r, i) => {
+      map[unique[i]] = r.status === 'fulfilled'
+        ? { price: r.value.price, name: r.value.name, currency: r.value.currency }
+        : null;
     });
     return map;
+  }
+
+  /* ── Yahoo Finance news fetch (RSS per ticker) ────── */
+  async function fetchNews(tickers) {
+    if (!tickers.length) return [];
+    const unique = [...new Set(tickers.map(t => t.toUpperCase()))];
+    const settled = await Promise.allSettled(unique.map(async ticker => {
+      const url = `https://feeds.finance.yahoo.com/rss/2.0/headline?s=${encodeURIComponent(ticker)}&region=US&lang=en-US`;
+      const contents = await proxyFetch(url);
+      const doc = new DOMParser().parseFromString(contents, 'text/xml');
+      return Array.from(doc.querySelectorAll('item')).slice(0, 5).map(el => ({
+        ticker,
+        title: el.querySelector('title')?.textContent?.trim() || '',
+        link:  el.querySelector('link')?.textContent?.trim()  || '#',
+        date:  el.querySelector('pubDate')?.textContent?.trim() || '',
+        desc:  (el.querySelector('description')?.textContent || '')
+                 .replace(/<[^>]*>/g, '').trim().slice(0, 160),
+      }));
+    }));
+    const all = [];
+    settled.forEach(r => { if (r.status === 'fulfilled') all.push(...r.value); });
+    all.sort((a, b) => new Date(b.date) - new Date(a.date));
+    return all;
+  }
+
+  /* ── Render news ──────────────────────────────────── */
+  function renderNews(items) {
+    const section = document.getElementById('news-section');
+    const grid    = document.getElementById('news-grid');
+    if (!items.length) { section.style.display = 'none'; return; }
+    section.style.display = 'block';
+    grid.innerHTML = '';
+    items.forEach(item => {
+      const card = document.createElement('article');
+      card.className = 'news-card';
+      card.innerHTML = `
+        <div class="news-card-top">
+          <span class="news-ticker-badge">${escHtml(item.ticker)}</span>
+          <time class="news-time">${escHtml(timeAgo(item.date))}</time>
+        </div>
+        <h3><a href="${escHtml(item.link)}" target="_blank" rel="noopener">${escHtml(item.title)}</a></h3>
+        ${item.desc ? `<p class="news-desc">${escHtml(item.desc)}</p>` : ''}`;
+      grid.append(card);
+    });
   }
 
   /* ── Render summary ───────────────────────────────── */
@@ -758,36 +904,42 @@
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  /* ── Price loading ────────────────────────────────── */
+  /* ── Refresh prices + news ────────────────────────── */
   async function refreshPrices() {
     const tickers = holdings.map(h => h.ticker.toUpperCase());
     if (!tickers.length) { renderSummary(); return; }
 
-    const errEl = document.getElementById('price-error');
+    const errEl      = document.getElementById('price-error');
     const refreshBtn = document.getElementById('btn-refresh');
+    const newsGrid   = document.getElementById('news-grid');
     refreshBtn.disabled = true;
     refreshBtn.textContent = '↻ Fetching…';
     errEl.style.display = 'none';
+    // Show a loading placeholder in the news grid
+    document.getElementById('news-section').style.display = 'block';
+    newsGrid.innerHTML = '<p class="news-loading">Loading news…</p>';
 
-    try {
-      const fetched = await fetchPrices(tickers);
-      // Mark tickers with no result as null (not undefined)
-      tickers.forEach(t => { if (fetched[t] === undefined) fetched[t] = null; });
-      prices = fetched;
-      const now = new Date();
+    const [priceResult, newsItems] = await Promise.allSettled([
+      fetchPrices(tickers),
+      fetchNews(tickers),
+    ]);
+
+    if (priceResult.status === 'fulfilled') {
+      prices = priceResult.value;
       document.getElementById('last-updated').textContent =
-        'Prices as of ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } catch (e) {
-      errEl.textContent = 'Could not fetch prices: ' + e.message + '. Showing cost basis only.';
+        'Prices as of ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else {
+      errEl.textContent = 'Could not fetch prices: ' + priceResult.reason.message;
       errEl.style.display = 'block';
       tickers.forEach(t => { prices[t] = prices[t] || null; });
-    } finally {
-      refreshBtn.disabled = false;
-      refreshBtn.textContent = '↻ Refresh Prices';
     }
 
     renderTable();
     renderSummary();
+    renderNews(newsItems.status === 'fulfilled' ? newsItems.value : []);
+
+    refreshBtn.disabled = false;
+    refreshBtn.textContent = '↻ Refresh Prices';
   }
 
   /* ── CRUD ─────────────────────────────────────────── */
