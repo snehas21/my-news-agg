@@ -1,0 +1,15 @@
+{
+  "name": "pickleball-poller",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Polls Richmond Hill Active Communities for Pickleball openings",
+  "scripts": {
+    "start": "node server.mjs",
+    "install-browsers": "npx playwright install chromium"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "playwright": "1.53.0"
+  }
+}
