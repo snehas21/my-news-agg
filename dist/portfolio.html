@@ -306,8 +306,8 @@
   }
 
   /* ── Modal ───────────────────────────────────────── */
-  .modal-overlay[hidden] { display: none; }
   .modal-overlay {
+    display: none; /* hidden by default; JS sets display:flex to open */
     position: fixed;
     inset: 0;
     background: rgba(15,23,42,0.45);
@@ -519,7 +519,7 @@
 </footer>
 
 <!-- Add / Edit modal -->
-<div id="holding-modal" class="modal-overlay" hidden>
+<div id="holding-modal" class="modal-overlay">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal-header">
       <h2 id="modal-title">Add Holding</h2>
@@ -545,7 +545,7 @@
         <label for="f-label">Custom Label (optional)</label>
         <input type="text" id="f-label" placeholder="e.g. Apple Inc." autocomplete="off"/>
       </div>
-      <p id="form-error" class="form-error" hidden></p>
+      <p id="form-error" class="form-error" style="display:none"></p>
       <div class="form-actions">
         <button type="button" class="btn-secondary" id="btn-cancel">Cancel</button>
         <button type="submit" class="btn-primary" id="btn-save">Add Holding</button>
@@ -818,10 +818,10 @@
   function openAdd() {
     editId = null;
     form.reset();
-    errEl.hidden = true;
+    errEl.style.display = 'none';
     titleEl.textContent = 'Add Holding';
     saveBtn.textContent = 'Add Holding';
-    modal.hidden = false;
+    modal.style.display = 'flex';
     document.getElementById('f-ticker').focus();
   }
 
@@ -833,15 +833,15 @@
     document.getElementById('f-shares').value    = h.shares;
     document.getElementById('f-avg-price').value = h.avgPrice;
     document.getElementById('f-label').value     = h.label || '';
-    errEl.hidden = true;
+    errEl.style.display = 'none';
     titleEl.textContent = 'Edit Holding';
     saveBtn.textContent = 'Save Changes';
-    modal.hidden = false;
+    modal.style.display = 'flex';
     document.getElementById('f-ticker').focus();
   }
 
   function closeModal() {
-    modal.hidden = true;
+    modal.style.display = 'none';
     editId = null;
     form.reset();
   }
@@ -850,11 +850,11 @@
   document.getElementById('modal-close').addEventListener('click', closeModal);
   document.getElementById('btn-cancel').addEventListener('click', closeModal);
   modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.style.display !== 'none') closeModal(); });
 
   form.addEventListener('submit', async e => {
     e.preventDefault();
-    errEl.hidden = true;
+    errEl.style.display = 'none';
 
     const ticker   = document.getElementById('f-ticker').value.trim().toUpperCase();
     const shares   = parseFloat(document.getElementById('f-shares').value);
@@ -876,7 +876,7 @@
 
   function showErr(msg) {
     errEl.textContent = msg;
-    errEl.hidden = false;
+    errEl.style.display = 'block';
   }
 
   /* ── Refresh button ───────────────────────────────── */
