@@ -545,6 +545,8 @@ main { padding: 20px 16px 60px; }
           ${sourcesList}
         </div>
       </div>
+      <a href="portfolio.html" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#10b981;color:#fff;font-family:inherit;font-size:13px;font-weight:600;border:none;border-radius:8px;text-decoration:none;box-shadow:0 1px 4px rgba(16,185,129,.3);transition:background .15s" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">📈 Portfolio</a>
+      <button class="btn-add-source" id="open-add">+ Add Source</button>
     </div>
   </header>
 

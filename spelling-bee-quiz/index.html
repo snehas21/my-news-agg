@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐝 Spelling Bee Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --honey: #FFD700;
+    --honey-dark: #F5A623;
+    --bee-black: #1A1A2E;
+    --cream: #FFFDF0;
+    --green: #4CAF50;
+    --red: #F44336;
+    --blue: #2196F3;
+    --purple: #9C27B0;
+    --white: #ffffff;
+    --shadow: 0 8px 32px rgba(0,0,0,0.15);
+    --radius: 20px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--cream);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Honeycomb background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50V16L28 0l28 16v34L28 66zm0 0v34M0 50l28 16 28-16' fill='none' stroke='%23FFD70033' stroke-width='2'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    text-align: center;
+    padding: 30px 0 20px;
+    animation: dropIn 0.6s ease;
+  }
+
+  .header h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 3rem;
+    color: var(--bee-black);
+    text-shadow: 3px 3px 0 var(--honey);
+    line-height: 1;
+  }
+
+  .header .subtitle {
+    font-size: 1rem;
+    color: #666;
+    font-weight: 600;
+    margin-top: 6px;
+  }
+
+  .bee-emoji {
+    font-size: 2.5rem;
+    display: inline-block;
+    animation: wiggle 2s ease-in-out infinite;
+  }
+
+  /* ===== SCREENS ===== */
+  .screen { display: none; animation: fadeUp 0.4s ease; }
+  .screen.active { display: block; }
+
+  /* ===== HOME SCREEN ===== */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 32px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+    border: 3px solid transparent;
+  }
+
+  .card.honey-border { border-color: var(--honey); }
+
+  .btn {
+    display: inline-block;
+    padding: 16px 36px;
+    border-radius: 50px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.3rem;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+    text-decoration: none;
+  }
+
+  .btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+  .btn:active { transform: translateY(0); }
+
+  .btn-primary { background: var(--honey); color: var(--bee-black); box-shadow: 0 4px 0 var(--honey-dark); }
+  .btn-secondary { background: var(--bee-black); color: var(--white); box-shadow: 0 4px 0 #333; }
+  .btn-sm { padding: 10px 22px; font-size: 1rem; }
+  .btn-full { width: 100%; text-align: center; display: block; }
+
+  .name-input {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    padding: 14px 20px;
+    border: 3px solid var(--honey);
+    border-radius: 14px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+    background: var(--cream);
+  }
+
+  .name-input:focus { border-color: var(--honey-dark); }
+
+  /* ===== LEADERBOARD ===== */
+  .leaderboard-list { list-style: none; }
+  .leaderboard-list li {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    background: var(--cream);
+    font-weight: 700;
+    font-size: 1rem;
+    animation: fadeUp 0.3s ease both;
+  }
+
+  .leaderboard-list li:nth-child(1) { background: #fff8dc; border: 2px solid #FFD700; }
+  .leaderboard-list li:nth-child(2) { background: #f5f5f5; border: 2px solid #ccc; }
+  .leaderboard-list li:nth-child(3) { background: #fff0e6; border: 2px solid #cd7f32; }
+
+  .rank-badge {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    flex-shrink: 0;
+    background: var(--honey);
+    color: var(--bee-black);
+  }
+
+  .score-pill {
+    margin-left: auto;
+    background: var(--bee-black);
+    color: var(--honey);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-family: 'Fredoka One', cursive;
+  }
+
+  /* ===== QUIZ SCREEN ===== */
+  .progress-bar-wrap {
+    background: #e0e0e0;
+    border-radius: 10px;
+    height: 14px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--honey), var(--honey-dark));
+    border-radius: 10px;
+    transition: width 0.4s ease;
+  }
+
+  .quiz-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: #555;
+    font-size: 0.95rem;
+  }
+
+  .question-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 36px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    border: 3px solid var(--honey);
+    margin-bottom: 20px;
+  }
+
+  .word-prompt {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    color: #888;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+  }
+
+  .listen-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bee-black);
+    color: var(--honey);
+    border: none;
+    border-radius: 50px;
+    padding: 16px 32px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 0 #333;
+    margin-bottom: 24px;
+  }
+
+  .listen-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #333; }
+  .listen-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #333; }
+  .listen-btn.speaking { background: var(--honey); color: var(--bee-black); animation: pulse 0.5s ease infinite alternate; }
+
+  .spell-input {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.8rem;
+    text-align: center;
+    letter-spacing: 4px;
+    padding: 16px 20px;
+    border: 3px solid var(--honey);
+    border-radius: 14px;
+    width: 100%;
+    outline: none;
+    background: var(--cream);
+    transition: border-color 0.2s, background 0.2s;
+    text-transform: lowercase;
+  }
+
+  .spell-input:focus { border-color: var(--honey-dark); background: #fff; }
+  .spell-input.correct { border-color: var(--green); background: #e8f5e9; }
+  .spell-input.incorrect { border-color: var(--red); background: #ffebee; }
+
+  .hint-card {
+    background: var(--cream);
+    border-radius: 14px;
+    padding: 14px 18px;
+    font-size: 0.95rem;
+    color: #444;
+    font-weight: 600;
+    margin-top: 16px;
+    border-left: 4px solid var(--honey-dark);
+    text-align: left;
+    display: none;
+  }
+
+  .hint-card.show { display: block; animation: fadeUp 0.3s ease; }
+
+  .feedback-banner {
+    padding: 14px;
+    border-radius: 14px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.4rem;
+    text-align: center;
+    margin-top: 16px;
+    display: none;
+  }
+
+  .feedback-banner.correct { display: block; background: #e8f5e9; color: var(--green); }
+  .feedback-banner.incorrect { display: block; background: #ffebee; color: var(--red); }
+  .feedback-banner .correct-answer { font-size: 1rem; font-family: 'Nunito', sans-serif; color: #333; margin-top: 4px; font-weight: 700; }
+
+  /* ===== RESULTS ===== */
+  .score-circle {
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: var(--honey);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    box-shadow: 0 8px 0 var(--honey-dark), var(--shadow);
+    animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .score-circle .score-num {
+    font-family: 'Fredoka One', cursive;
+    font-size: 3rem;
+    color: var(--bee-black);
+    line-height: 1;
+  }
+
+  .score-circle .score-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--bee-black);
+    opacity: 0.7;
+  }
+
+  .result-message {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.8rem;
+    text-align: center;
+    color: var(--bee-black);
+    margin-bottom: 8px;
+  }
+
+  .results-breakdown {
+    list-style: none;
+    margin: 20px 0;
+  }
+
+  .results-breakdown li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+
+  .results-breakdown li.r-correct { background: #e8f5e9; }
+  .results-breakdown li.r-wrong { background: #ffebee; }
+
+  .result-icon { font-size: 1.2rem; flex-shrink: 0; }
+  .result-word { flex: 1; font-family: 'Fredoka One', cursive; font-size: 1rem; }
+  .result-answer { font-size: 0.85rem; color: #666; font-weight: 600; }
+
+  .btn-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  /* ===== SECTION TITLES ===== */
+  .section-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.4rem;
+    color: var(--bee-black);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes dropIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes popIn { from { transform: scale(0.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @keyframes wiggle { 0%,100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }
+  @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.05); } }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+  @keyframes bounceIn { 0% { transform: scale(0.8); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+  .shake { animation: shake 0.3s ease; }
+  .bounce { animation: bounceIn 0.3s ease; }
+
+  /* ===== MODE SELECTOR ===== */
+  .mode-selector {
+    display: flex;
+    gap: 10px;
+  }
+
+  .mode-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 14px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    cursor: pointer;
+    border: 3px solid #e0e0e0;
+    background: var(--cream);
+    color: #aaa;
+    transition: all 0.2s;
+  }
+
+  .mode-btn.active {
+    border-color: var(--honey);
+    background: var(--honey);
+    color: var(--bee-black);
+  }
+
+  /* ===== PLAYER INDICATOR ===== */
+  .player-indicator {
+    text-align: center;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.2rem;
+    padding: 10px 20px;
+    border-radius: 50px;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .player-indicator.p1 { background: #fff3cd; color: #856404; border: 2px solid var(--honey); }
+  .player-indicator.p2 { background: #cfe2ff; color: #084298; border: 2px solid #90caf9; }
+
+  /* ===== 2P SCORE DISPLAY ===== */
+  .two-player-scores {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .player-score-card {
+    flex: 1;
+    text-align: center;
+    padding: 20px;
+    border-radius: var(--radius);
+    border: 3px solid transparent;
+  }
+
+  .player-score-card.p1 { background: #fff8dc; border-color: var(--honey); }
+  .player-score-card.p2 { background: #e8f0fe; border-color: #90caf9; }
+  .player-score-card.winner { border-width: 4px; box-shadow: 0 0 0 4px rgba(76,175,80,0.2); border-color: var(--green); }
+
+  .player-score-card .ps-name {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    margin-bottom: 6px;
+  }
+
+  .player-score-card .ps-num {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2.8rem;
+    line-height: 1;
+  }
+
+  .player-score-card .ps-label { font-size: 0.8rem; font-weight: 700; color: #777; }
+
+  /* ===== EMPTY STATE ===== */
+  .empty-state { text-align: center; color: #aaa; padding: 20px; font-weight: 700; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 480px) {
+    .header h1 { font-size: 2.2rem; }
+    .question-card { padding: 24px 20px; }
+    .spell-input { font-size: 1.4rem; }
+    .btn-group { flex-direction: column; }
+    .btn-group .btn { width: 100%; text-align: center; }
+  }
+
+  .tab-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    background: #fff;
+    padding: 6px;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    border-radius: 12px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    color: #aaa;
+  }
+
+  .tab.active { background: var(--honey); color: var(--bee-black); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="header">
+    <h1><span class="bee-emoji">🐝</span> Spelling Bee Quiz</h1>
+    <p class="subtitle">Spelling Bee of Canada — Junior 2026</p>
+  </header>
+
+  <!-- HOME SCREEN -->
+  <div id="screen-home" class="screen active">
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab('play')">🎮 Play</div>
+      <div class="tab" onclick="switchTab('scores')">🏆 Scores</div>
+    </div>
+
+    <div id="tab-play">
+      <div class="card honey-border">
+        <div class="section-title">🎮 Game Mode</div>
+        <div class="mode-selector">
+          <button class="mode-btn active" id="mode-1p" onclick="selectMode(1)">👤 1 Player</button>
+          <button class="mode-btn" id="mode-2p" onclick="selectMode(2)">👥 2 Players</button>
+        </div>
+        <br>
+        <div class="section-title">👤 Who's playing?</div>
+        <input type="text" class="name-input" id="player-name" placeholder="Player 1 name..." maxlength="20">
+        <div id="p2-input" style="display:none;margin-top:12px">
+          <input type="text" class="name-input" id="player2-name" placeholder="Player 2 name..." maxlength="20">
+        </div>
+        <br><br>
+        <button class="btn btn-primary btn-full" onclick="startQuiz()">Start Quiz! 🚀</button>
+      </div>
+
+      <div class="card">
+        <div class="section-title">📋 How it works</div>
+        <p style="font-weight:600;color:#555;line-height:1.7">
+          🔊 Press the <strong>Listen</strong> button to hear the word<br>
+          ✏️ Type the spelling in the box<br>
+          ✅ Submit to check your answer<br>
+          🏁 Complete 10 words to finish!
+        </p>
+      </div>
+    </div>
+
+    <div id="tab-scores" style="display:none">
+      <div class="card">
+        <div class="section-title">🏆 Top Scores</div>
+        <ul class="leaderboard-list" id="leaderboard-list">
+          <li class="empty-state">No scores yet — be the first! 🌟</li>
+        </ul>
+        <br>
+        <button class="btn btn-secondary btn-sm" onclick="clearScores()">🗑️ Clear All Scores</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div id="screen-quiz" class="screen">
+    <div id="player-indicator" class="player-indicator"></div>
+    <div class="quiz-meta">
+      <span id="q-counter">Question 1 of 10</span>
+      <span id="q-score">Score: 0</span>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+    </div>
+
+    <div class="question-card">
+      <div class="word-prompt">Listen to the word, then spell it:</div>
+      <button class="listen-btn" id="listen-btn" onclick="speakWord()">
+        🔊 Listen
+      </button>
+      <button class="listen-btn" id="listen-slow-btn" onclick="speakWordSlowly()" style="background:#e8f4fd;color:#1565c0;border:2px solid #90caf9;margin-left:8px">
+        🐢 Slowly
+      </button>
+      <br>
+      <input type="text"
+        class="spell-input"
+        id="spell-input"
+        placeholder="type here..."
+        autocomplete="off"
+        autocorrect="off"
+        spellcheck="false"
+        onkeydown="handleKey(event)">
+      <div class="hint-card" id="hint-card"></div>
+      <div class="feedback-banner" id="feedback-banner"></div>
+    </div>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <button class="btn btn-primary" id="submit-btn" onclick="submitAnswer()" style="flex:1">
+        Check ✏️
+      </button>
+      <button class="btn btn-secondary" id="next-btn" onclick="nextQuestion()" style="flex:1;display:none">
+        Next ➡️
+      </button>
+    </div>
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div id="screen-results" class="screen">
+    <div class="card">
+      <!-- 1P layout -->
+      <div id="results-1p">
+        <div class="score-circle" id="score-circle">
+          <span class="score-num" id="final-score">0</span>
+          <span class="score-label">out of 10</span>
+        </div>
+      </div>
+      <!-- 2P layout -->
+      <div id="results-2p" style="display:none">
+        <div class="two-player-scores">
+          <div class="player-score-card p1" id="result-p1-card">
+            <div class="ps-name" id="result-p1-name">Player 1</div>
+            <div class="ps-num" id="result-p1-score">0</div>
+            <div class="ps-label">out of 5</div>
+          </div>
+          <div class="player-score-card p2" id="result-p2-card">
+            <div class="ps-name" id="result-p2-name">Player 2</div>
+            <div class="ps-num" id="result-p2-score">0</div>
+            <div class="ps-label">out of 5</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-message" id="result-message">Great job! 🎉</div>
+      <p style="text-align:center;color:#777;font-weight:600;margin-bottom:16px" id="result-sub"></p>
+
+      <ul class="results-breakdown" id="results-breakdown"></ul>
+
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="startQuiz()">Play Again 🔄</button>
+        <button class="btn btn-secondary" onclick="goHome()">Home 🏠</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// WORD LIST — All 400 words from Junior SBOC 2026
+// ============================================================
+const WORDS = [
+  {word:"abiotic",def:"Devoid of life"},
+  {word:"abreast",def:"Side by side, facing the same way"},
+  {word:"abscise",def:"To cut off"},
+  {word:"abstraction",def:"An abstract or general idea or term"},
+  {word:"acclimate",def:"To become accustomed to a new environment"},
+  {word:"acknowledgment",def:"The recognition of something's existence or truth"},
+  {word:"adrenaline",def:"A hormone that increases your energy"},
+  {word:"advancement",def:"The process of promoting a plan or a person"},
+  {word:"aerophyte",def:"A plant that grows on another plant for support"},
+  {word:"affordable",def:"Reasonably priced"},
+  {word:"aggressive",def:"Behaving in a determined and forceful manner"},
+  {word:"alate",def:"Having wings"},
+  {word:"algorithms",def:"Procedures used for solving a problem"},
+  {word:"allegation",def:"An assertion that someone has done something wrong"},
+  {word:"alliteration",def:"The same letter or sound at the beginning of adjacent words"},
+  {word:"alteration",def:"The act of making a change or adjustment"},
+  {word:"alternate",def:"To go back and forth"},
+  {word:"amputation",def:"The action of surgically cutting off a limb"},
+  {word:"anarchist",def:"A person who advocates the abolition of government"},
+  {word:"anticipation",def:"Expectation"},
+  {word:"antiquity",def:"The quality of being ancient"},
+  {word:"apparent",def:"Clearly visible or understood"},
+  {word:"applicable",def:"Appropriate or relevant"},
+  {word:"arcane",def:"Understood by few; mysterious"},
+  {word:"armaments",def:"Military weapons and equipment"},
+  {word:"arpeggio",def:"A musical technique where chord notes are played one after the other"},
+  {word:"assortment",def:"A collection of various kinds of things"},
+  {word:"authentic",def:"Genuine or real"},
+  {word:"ballium",def:"Defensive walls surrounding the outer court of a castle"},
+  {word:"balustrade",def:"The handrail on a staircase"},
+  {word:"barometer",def:"An instrument for measuring barometric pressure"},
+  {word:"battlements",def:"Parapets at the top of a castle wall"},
+  {word:"bellicose",def:"Aggressively hostile or eager to fight"},
+  {word:"bequeath",def:"To pass on possessions after death by means of a will"},
+  {word:"bifurcate",def:"To divide into two branches or forks"},
+  {word:"biofuel",def:"A fuel derived from living matter"},
+  {word:"biopsy",def:"An examination of tissue removed from a living body"},
+  {word:"blandishments",def:"Flattery that is intended to coax"},
+  {word:"brassica",def:"A plant in the mustard family"},
+  {word:"bravura",def:"Great technical skill and brilliance"},
+  {word:"brio",def:"Vigour or liveliness"},
+  {word:"brougham",def:"A type of horse-drawn carriage"},
+  {word:"calends",def:"The first day of the month in the ancient Roman calendar"},
+  {word:"cannelloni",def:"Tubular pieces of pasta"},
+  {word:"cantaloupe",def:"A small round melon"},
+  {word:"carat",def:"A unit of weight in gemstones and pearls"},
+  {word:"caribbean",def:"The region consisting of the Caribbean Sea and surrounding coasts"},
+  {word:"carrel",def:"A small cubicle with a desk"},
+  {word:"cataplexy",def:"A sudden loss of muscle tone"},
+  {word:"catapult",def:"A military machine for hurling large stones or missiles"},
+  {word:"cathartic",def:"Providing psychological relief"},
+  {word:"cavernous",def:"Giving the impression of vast, dark depths"},
+  {word:"celeriac",def:"A type of celery that forms a large swollen root"},
+  {word:"cerise",def:"A vibrant reddish-pink colour"},
+  {word:"chalice",def:"A large cup or goblet"},
+  {word:"chaperone",def:"A person who accompanies and looks after another person"},
+  {word:"chiton",def:"A gown or tunic worn in ancient Greece"},
+  {word:"chronograph",def:"A stopwatch"},
+  {word:"churlish",def:"Rude in a mean-spirited and surly way"},
+  {word:"cinnabar",def:"A bright red mineral"},
+  {word:"circumpolar",def:"Situated around or inhabiting one of the Earth's poles"},
+  {word:"claimant",def:"A person who brings a civil action in a court of law"},
+  {word:"clevis",def:"A U-shaped yoke at the end of a chain or rod"},
+  {word:"clinician",def:"A doctor or qualified person involved in treating patients"},
+  {word:"cognac",def:"A high-quality brandy"},
+  {word:"collided",def:"Hit with force; crashed"},
+  {word:"colloquial",def:"Language used in ordinary or familiar conversation"},
+  {word:"commensurate",def:"In proportion"},
+  {word:"commonality",def:"Common values, interest and identity between people"},
+  {word:"community",def:"The people living in one locality"},
+  {word:"commutative",def:"Giving the same mathematical result regardless of order"},
+  {word:"compatible",def:"Well-suited"},
+  {word:"compelling",def:"Evoking interest or admiration"},
+  {word:"comprehend",def:"To understand"},
+  {word:"compromise",def:"An agreement reached by each side making concessions"},
+  {word:"concision",def:"The quality of expressing a great deal in a short space"},
+  {word:"concussion",def:"An injury to the brain due to jarring from a blow or fall"},
+  {word:"confederation",def:"An organization of parties or groups united in an alliance"},
+  {word:"consequently",def:"As a result of"},
+  {word:"constituency",def:"The district which an elected official represents"},
+  {word:"contaminants",def:"Substances that pollute or spoil something"},
+  {word:"contraction",def:"A shortened form of a word"},
+  {word:"copyright",def:"Legal protection for published material"},
+  {word:"corona",def:"The outer atmosphere of the sun or another star"},
+  {word:"corridor",def:"A hallway"},
+  {word:"cosmetologist",def:"A person trained in cosmetics and beauty treatments"},
+  {word:"croquet",def:"A game played on a lawn with mallets and balls"},
+  {word:"cupreous",def:"Copper-coloured"},
+  {word:"curtailment",def:"The action of reducing or restricting something"},
+  {word:"dactyl",def:"In poetry, a metric foot of one stressed and two unstressed syllables"},
+  {word:"dauntingly",def:"Intimidatingly"},
+  {word:"decadent",def:"Luxuriously self-indulgent"},
+  {word:"decating",def:"A textile finishing process to add lustre"},
+  {word:"declamatory",def:"Impassioned or vehement in expression"},
+  {word:"defamation",def:"The action of damaging someone's reputation"},
+  {word:"definitely",def:"Without a doubt"},
+  {word:"delirium",def:"A state of acute confusion and reduced awareness"},
+  {word:"deluge",def:"A drenching rainfall"},
+  {word:"demographics",def:"Population statistics"},
+  {word:"demonstrable",def:"Clearly apparent or provable"},
+  {word:"denotation",def:"Literal meaning of a word"},
+  {word:"denudation",def:"The gradual wearing away of the Earth's surface material"},
+  {word:"deportment",def:"A person's behaviour or manners"},
+  {word:"derivatives",def:"Something which is based on another source"},
+  {word:"desirable",def:"Pleasing; worth wanting"},
+  {word:"destructive",def:"Tending to destroy or cause great damage"},
+  {word:"desultory",def:"Lacking enthusiasm"},
+  {word:"deviate",def:"To depart from usual or accepted standards"},
+  {word:"devour",def:"To eat food quickly"},
+  {word:"differential",def:"The difference between amounts of things"},
+  {word:"diffraction",def:"The bending of light and sound waves around obstacles"},
+  {word:"dignitaries",def:"People of high official position or rank"},
+  {word:"diligence",def:"Careful and persistent work"},
+  {word:"discontinue",def:"To put an end to; to stop"},
+  {word:"disgruntled",def:"Angry or dissatisfied"},
+  {word:"disparity",def:"A great difference"},
+  {word:"dispassionate",def:"Unemotional"},
+  {word:"dispensary",def:"A room where medicines are prepared and provided"},
+  {word:"distasteful",def:"Disagreeable or unpleasant"},
+  {word:"distillation",def:"Purifying a liquid by heating and cooling"},
+  {word:"distributor",def:"An agent who supplies goods to retailers"},
+  {word:"diversity",def:"Variety"},
+  {word:"dolour",def:"Sorrow or grief"},
+  {word:"dugong",def:"A herbivorous, aquatic mammal"},
+  {word:"echinoid",def:"A class of sea creatures including sea urchins"},
+  {word:"ecocidal",def:"Referring to the reckless destruction of the environment"},
+  {word:"edmonton",def:"The capital of Alberta"},
+  {word:"electrostatic",def:"Relating to stationary electric charges or fields"},
+  {word:"emergency",def:"A sudden occurrence demanding immediate action"},
+  {word:"encounter",def:"To meet someone unexpectedly"},
+  {word:"endowment",def:"An income given or bequeathed to someone"},
+  {word:"engulfed",def:"Immersed or swallowed up"},
+  {word:"enigmatic",def:"Difficult to understand; mysterious"},
+  {word:"environment",def:"The air, water and land in which people, animals and plants live"},
+  {word:"epicanthus",def:"A fold of skin overlapping the inner angle of the eye"},
+  {word:"equitation",def:"The art and practice of horsemanship and riding"},
+  {word:"equivocate",def:"To use vague language to avoid being direct"},
+  {word:"eristic",def:"Characterized by the desire to win an argument rather than find truth"},
+  {word:"ermine",def:"Any of various weasels having a white winter coat"},
+  {word:"espousal",def:"The act of adopting or supporting a belief or way of life"},
+  {word:"etching",def:"A print produced by engraving or wood cuts"},
+  {word:"exiguous",def:"Inadequate in size or amount"},
+  {word:"expectancy",def:"The state of hoping that something will happen"},
+  {word:"expunge",def:"To obliterate"},
+  {word:"exuviate",def:"To shed a skin or shell"},
+  {word:"factual",def:"Concerned with what is actually true"},
+  {word:"falcate",def:"Hooked or curved like a sickle"},
+  {word:"fatalistic",def:"Relating to the belief that all events are predetermined"},
+  {word:"ferity",def:"Wild or untamed"},
+  {word:"figurine",def:"A small ornamental statuette"},
+  {word:"finale",def:"The last part of a piece of music or entertainment"},
+  {word:"finials",def:"Ornaments at the top, end, or corner of an object"},
+  {word:"fondant",def:"A sweet, thick paste made of sugar and water"},
+  {word:"foreclosure",def:"Taking back property when the owner fails to make payments"},
+  {word:"forgetfulness",def:"Lapse of memory"},
+  {word:"fortuitous",def:"Happening by a lucky chance"},
+  {word:"frugivore",def:"An organism that chiefly eats fruit"},
+  {word:"fugitive",def:"An escapee"},
+  {word:"fundamental",def:"Serving as an essential part or foundation"},
+  {word:"gambol",def:"To run or jump about playfully"},
+  {word:"generalities",def:"Statements which contain no details"},
+  {word:"generation",def:"All of the people born at about the same time"},
+  {word:"generator",def:"A machine for converting mechanical energy into electricity"},
+  {word:"gloaming",def:"Twilight"},
+  {word:"graduation",def:"A ceremony conferring degrees or diplomas"},
+  {word:"gregale",def:"A strong northeast wind"},
+  {word:"grimace",def:"A twisted expression expressing disgust or pain"},
+  {word:"groundsel",def:"A plant in the daisy family"},
+  {word:"gymnasium",def:"A room equipped for gymnastics and physical exercise"},
+  {word:"hallux",def:"A person's big toe"},
+  {word:"hellebore",def:"Any of several plants in the buttercup family"},
+  {word:"hemispheric",def:"Shaped like, or related to, half a sphere"},
+  {word:"herbage",def:"Vegetation"},
+  {word:"hoist",def:"To raise something by means of ropes and pulleys"},
+  {word:"holystone",def:"A piece of soft stone used for scouring ship decks"},
+  {word:"homograph",def:"Two words spelt the same but with different meanings"},
+  {word:"horoscope",def:"A forecast of a person's future based on the stars"},
+  {word:"hospitable",def:"Friendly and welcoming"},
+  {word:"hovel",def:"A small squalid dwelling"},
+  {word:"hydrophone",def:"A device that detects and records ocean sounds"},
+  {word:"idiom",def:"An expression whose meaning differs from its individual words"},
+  {word:"illogical",def:"Senseless or unreasonable"},
+  {word:"immigration",def:"The act of coming to live permanently in a new country"},
+  {word:"imperative",def:"Of vital importance"},
+  {word:"imperial",def:"Relating to the system of non-metric weights and measures"},
+  {word:"imperturbable",def:"Calm and easy going"},
+  {word:"implement",def:"A piece of equipment used for a particular purpose"},
+  {word:"impudence",def:"Rudeness or insolence"},
+  {word:"inaccurate",def:"Imprecise or untrue"},
+  {word:"incentive",def:"Motivation"},
+  {word:"inclusivity",def:"The practice of not excluding participants on various grounds"},
+  {word:"individual",def:"Single or separate"},
+  {word:"inductee",def:"A person formally admitted into an organization"},
+  {word:"inference",def:"A conclusion reached on the basis of deduction and speculation"},
+  {word:"infringement",def:"The action of breaking the terms of a law or agreement"},
+  {word:"inheritance",def:"A bequest or endowment"},
+  {word:"installation",def:"The action of fitting or putting something in"},
+  {word:"insulation",def:"Material used to prevent heat loss"},
+  {word:"intergalactic",def:"Relating to or situated between two or more galaxies"},
+  {word:"interglacial",def:"Relating to a period of milder climate between two glacial periods"},
+  {word:"interrogation",def:"The act of questioning someone"},
+  {word:"intimation",def:"An indication or hint"},
+  {word:"irenic",def:"Tending to promote peace or reconciliation"},
+  {word:"irresolute",def:"Indecisive"},
+  {word:"jewelweed",def:"A wild plant with orange or yellow flowers"},
+  {word:"juncture",def:"A point in time, especially a critical one"},
+  {word:"juvenescent",def:"Young in appearance or having the quality of youth"},
+  {word:"kepi",def:"A military cap with a circular top and horizontal peak"},
+  {word:"kombucha",def:"Fermented tea"},
+  {word:"laceration",def:"A rough, jagged tear"},
+  {word:"lanate",def:"Woolly or covered with something resembling wool"},
+  {word:"legitimate",def:"Reasonable, sensible or valid"},
+  {word:"levanter",def:"An easterly wind"},
+  {word:"lexigrams",def:"Symbols representing a word"},
+  {word:"li",def:"A Chinese unit of linear measurement"},
+  {word:"limitation",def:"Restriction"},
+  {word:"llama",def:"A domesticated pack animal native to the Andes"},
+  {word:"logophile",def:"A lover of words"},
+  {word:"longevity",def:"Long life"},
+  {word:"lucrative",def:"Profitable"},
+  {word:"ludicrous",def:"Absurd, to the point of provoking ridicule"},
+  {word:"macadamia",def:"A type of edible nut"},
+  {word:"macerate",def:"To soften by soaking in a liquid"},
+  {word:"magnificent",def:"Extremely good; excellent"},
+  {word:"malaise",def:"A condition of general bodily weakness or discomfort"},
+  {word:"malingerer",def:"A shirker or slacker"},
+  {word:"mandir",def:"A Hindu or Jain temple"},
+  {word:"mansard",def:"A style of roof with four sloping sides"},
+  {word:"melange",def:"A mixture or medley"},
+  {word:"mentor",def:"A guide or advisor"},
+  {word:"miracle",def:"An extraordinary and welcome event not explicable by science"},
+  {word:"misconception",def:"A false or mistaken view"},
+  {word:"misconduct",def:"Unacceptable or improper behaviour"},
+  {word:"misdirected",def:"Given the wrong directions or instructions"},
+  {word:"misnomer",def:"A wrong or inaccurate name"},
+  {word:"moderate",def:"Reasonable; not extreme or excessive"},
+  {word:"monstrosity",def:"An outrageous or ugly person or thing"},
+  {word:"montage",def:"A technique of producing a composite from fragments"},
+  {word:"moraine",def:"A mass of rocks and sediment deposited by a glacier"},
+  {word:"motivate",def:"To inspire or incite"},
+  {word:"multimedia",def:"Relating to the use of a combination of media"},
+  {word:"mutilation",def:"The infliction of serious damage"},
+  {word:"mythological",def:"Relating to or based on myths"},
+  {word:"narrative",def:"A story or account of events or experiences"},
+  {word:"necropolis",def:"A cemetery"},
+  {word:"neolithic",def:"Relating to the last part of the Stone Age"},
+  {word:"nonjudgmental",def:"Refraining from criticizing others"},
+  {word:"notification",def:"A written or printed notice or announcement"},
+  {word:"nouveau",def:"Modern or up-to-date"},
+  {word:"nutrients",def:"Substances in food essential for the body to grow"},
+  {word:"oakum",def:"Loose fibre obtained by untwisting old rope"},
+  {word:"obstinate",def:"Self-willed or headstrong"},
+  {word:"ombre",def:"A pattern where colours fade into one another"},
+  {word:"opah",def:"A large fish"},
+  {word:"orientation",def:"An introduction to new surroundings or school"},
+  {word:"origami",def:"The Japanese art of folding paper into decorative shapes"},
+  {word:"osmosis",def:"The process of unconscious assimilation of ideas or knowledge"},
+  {word:"otherworldly",def:"Relating to an imaginary or spiritual life"},
+  {word:"panini",def:"A sandwich made with Italian bread, usually toasted"},
+  {word:"pannier",def:"A pair of bags fitted on either side of a bicycle wheel"},
+  {word:"pantropical",def:"Living or growing throughout the tropics"},
+  {word:"paramount",def:"More important than anything else"},
+  {word:"paternalistic",def:"Making decisions for others rather than letting them decide"},
+  {word:"pemmican",def:"A pressed cake of pounded dried meat mixed with fat"},
+  {word:"penitentiary",def:"A prison for people convicted of serious crimes"},
+  {word:"penury",def:"Extreme poverty"},
+  {word:"perception",def:"Awareness of something through the senses"},
+  {word:"peripherally",def:"Done in a way that is not closely involved"},
+  {word:"perlite",def:"A form of obsidian consisting of glassy globules"},
+  {word:"permanent",def:"Intended to last or remain unchanged indefinitely"},
+  {word:"perpetual",def:"Continuing forever"},
+  {word:"persistent",def:"Continuing to exist over a prolonged period"},
+  {word:"personification",def:"The attribution of human characteristics to non-human things"},
+  {word:"pessimistic",def:"Tending to believe the worst aspect of things"},
+  {word:"pesticide",def:"A substance used for killing insects and other creatures"},
+  {word:"physiotherapy",def:"Treatment by physical methods such as massage or exercise"},
+  {word:"piquancy",def:"A pleasantly sharp and appetizing flavour"},
+  {word:"plicate",def:"In biology, referring to a folded or corrugated structure"},
+  {word:"pochard",def:"A Eurasian duck"},
+  {word:"policymaker",def:"A person who creates plans to be carried out by governments"},
+  {word:"polypore",def:"A type of fungus"},
+  {word:"porridge",def:"Cereal boiled in water or milk"},
+  {word:"potable",def:"Fit for drinking"},
+  {word:"precatory",def:"Relating to or expressing a wish or request"},
+  {word:"preeminent",def:"Very distinguished in some way"},
+  {word:"premonition",def:"A strong feeling that something is about to happen"},
+  {word:"presage",def:"To forecast or predict"},
+  {word:"prescind",def:"To leave out of consideration"},
+  {word:"prevalence",def:"The condition of being widespread"},
+  {word:"prioress",def:"A woman who is head of a house of certain orders of nuns"},
+  {word:"procedural",def:"Relating to an established or official way of doing something"},
+  {word:"proclamation",def:"A public or official announcement"},
+  {word:"professional",def:"Engaged in something as a means of livelihood"},
+  {word:"projection",def:"The act of speaking distinctly and forcefully to an audience"},
+  {word:"pronounce",def:"To make the sound of a word in the correct way"},
+  {word:"proofread",def:"To read written work and mark any errors"},
+  {word:"propagation",def:"The breeding of a plant by natural processes"},
+  {word:"proposition",def:"A suggested scheme or plan of action"},
+  {word:"protectorate",def:"A territory largely controlled and protected by another"},
+  {word:"psaltery",def:"An ancient musical instrument with strings"},
+  {word:"puissant",def:"Powerful; influential"},
+  {word:"puritanical",def:"Very strict in moral or religious matters"},
+  {word:"purported",def:"Claimed or alleged"},
+  {word:"quadrat",def:"A small area selected at random for ecological sampling"},
+  {word:"quandary",def:"Dilemma"},
+  {word:"quebecois",def:"Relating to Quebec or the form of French spoken there"},
+  {word:"quinary",def:"Fifth in order of rank"},
+  {word:"raucous",def:"Rowdy; disorderly"},
+  {word:"reallocation",def:"Assigning something in a new or different manner"},
+  {word:"recreation",def:"An activity done for pleasure"},
+  {word:"refrigerate",def:"To make or keep cold for preservation"},
+  {word:"reimagine",def:"To think about something in a new and creative way"},
+  {word:"relegated",def:"Sent to a lower rank or condition"},
+  {word:"remembrance",def:"A thing kept as a reminder of something or someone"},
+  {word:"reptilian",def:"Characteristic of reptiles"},
+  {word:"reputation",def:"The opinions generally held about someone or something"},
+  {word:"requirement",def:"Something that is necessary"},
+  {word:"residential",def:"Designed for people to live in"},
+  {word:"resonated",def:"Filled with a deep, full, reverberating sound"},
+  {word:"retention",def:"The fact of keeping something in one's memory"},
+  {word:"reverie",def:"A state of being pleasantly lost in one's thoughts"},
+  {word:"rhebok",def:"A small antelope native to southern Africa"},
+  {word:"rhonchus",def:"A wheezing or snoring sound"},
+  {word:"roustabout",def:"An unskilled or casual labourer"},
+  {word:"routine",def:"Commonplace tasks done regularly"},
+  {word:"rufous",def:"Reddish brown in colour"},
+  {word:"sabbatical",def:"A period of leave from one's job for rest or training"},
+  {word:"sanitary",def:"Hygienic and clean"},
+  {word:"sapient",def:"Being capable of reasoning and higher thought"},
+  {word:"saturate",def:"To cause something to become thoroughly soaked"},
+  {word:"scamper",def:"To run or go hastily or quickly"},
+  {word:"scurried",def:"Moved in a hurried manner with short, quick steps"},
+  {word:"semipermeable",def:"Allowing certain substances to pass through, but not others"},
+  {word:"semiquaver",def:"A 16th note in musical notation"},
+  {word:"sensational",def:"Extraordinarily good; phenomenal"},
+  {word:"sequel",def:"A book or movie that continues the story of an earlier one"},
+  {word:"serialization",def:"The process of publishing a story in short installments"},
+  {word:"shroud",def:"A thing that envelops or obscures something"},
+  {word:"sifaka",def:"A type of lemur"},
+  {word:"significant",def:"Expressing great meaning or indicative of something"},
+  {word:"sinecure",def:"A position requiring little work but giving status or benefit"},
+  {word:"sinuous",def:"Lithe and supple"},
+  {word:"smorgasbord",def:"A buffet meal of assorted hot and cold dishes"},
+  {word:"solvency",def:"The possession of more assets than liabilities"},
+  {word:"sophism",def:"A clever but deceptive argument used to make a point"},
+  {word:"spherical",def:"Round, like a soccer ball"},
+  {word:"squalid",def:"Extremely dirty and unpleasant, often due to neglect or poverty"},
+  {word:"stalwart",def:"Loyal, reliable and hard-working"},
+  {word:"staminate",def:"In botany, a flower that has stamens but no carpels"},
+  {word:"stoppage",def:"The cessation of activity"},
+  {word:"strenuous",def:"Requiring great effort or exertion"},
+  {word:"substance",def:"The essence or meaning of a written or spoken thought"},
+  {word:"suffocate",def:"To die from lack of air or inability to breathe"},
+  {word:"summation",def:"The process of summing something up"},
+  {word:"swerve",def:"To make an abrupt change of direction"},
+  {word:"synthetic",def:"Produced artificially"},
+  {word:"tableaux",def:"Motionless figures or models representing scenes"},
+  {word:"tactile",def:"Perceptible by touch"},
+  {word:"tamarin",def:"A small South American monkey"},
+  {word:"telemetry",def:"The process of recording and transmitting instrument readings"},
+  {word:"terminal",def:"A building for the arrival and departure of air passengers"},
+  {word:"theodolite",def:"A surveying instrument for measuring horizontal and vertical angles"},
+  {word:"thesaurus",def:"A book that lists words in groups of synonyms"},
+  {word:"thoroughbred",def:"Pure-bred"},
+  {word:"tomalley",def:"The digestive gland of a lobster"},
+  {word:"traipse",def:"To walk aimlessly without reaching one's goal"},
+  {word:"transcend",def:"To go above and beyond an expectation"},
+  {word:"transgress",def:"To violate a rule, law, or moral code"},
+  {word:"tropism",def:"The turning of an organism in response to an external stimulus"},
+  {word:"truism",def:"A statement that is so obviously true it is almost pointless to say"},
+  {word:"trustworthy",def:"Deserving of trust and confidence"},
+  {word:"ultramarathon",def:"A running race longer than a 42.2 km marathon"},
+  {word:"unique",def:"Unlike anything else"},
+  {word:"unmitigated",def:"Absolute"},
+  {word:"unpalatable",def:"Not pleasant to taste"},
+  {word:"unshakable",def:"Unable to be disputed or questioned"},
+  {word:"utopia",def:"Any real or imaginary society considered near-perfect or ideal"},
+  {word:"vanguard",def:"A group of people leading the way in new developments"},
+  {word:"vaporize",def:"To turn something into a vapor or gas"},
+  {word:"varve",def:"A pair of thin bands of sediment deposited annually in glacial lakes"},
+  {word:"velocity",def:"The speed of motion"},
+  {word:"veracious",def:"Habitually truthful or honest"},
+  {word:"verrucose",def:"Covered with wart-like protuberances"},
+  {word:"viator",def:"A traveler"},
+  {word:"vindicated",def:"Cleared of blame or suspicion"},
+  {word:"vitality",def:"Exuberant physical strength or mental vigour"},
+  {word:"volitive",def:"Expressing a wish or desire"},
+  {word:"vulcanize",def:"To treat rubber with sulfur and heat for greater strength"},
+  {word:"wale",def:"A ridge or raised band in fabric"},
+  {word:"wanton",def:"Maliciously and unnecessarily cruel or destructive"},
+  {word:"wearisome",def:"Tiresome or tedious"},
+  {word:"whimper",def:"A low, feeble whine or sob"},
+  {word:"whimsical",def:"Playfully quaint or fanciful in an amusing way"},
+  {word:"winnow",def:"To remove chaff from grain by means of wind"},
+  {word:"witheringly",def:"Done in a way intended to criticize or shame"},
+  {word:"wound",def:"A break in the skin or an organ"},
+  {word:"wrest",def:"To forcibly pull something from a person's grasp"},
+  {word:"xeric",def:"Referring to a dry environment"},
+  {word:"yeoman",def:"A peasant who owned and cultivated a small plot of land"},
+  {word:"youthfulness",def:"The quality of being similar to or typical of young people"},
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let quizWords = [];
+let currentQ = 0;
+let score = 0;
+let answers = [];
+let playerName = '';
+let answered = false;
+let speechSynth = window.speechSynthesis;
+
+// Two-player state
+let gameMode = 1;         // 1 or 2
+let player2Name = '';
+let scores = [0, 0];      // [p1score, p2score]
+let currentPlayer = 0;    // 0 = P1, 1 = P2
+
+// ============================================================
+// STORAGE
+// ============================================================
+function getScores() {
+  try { return JSON.parse(localStorage.getItem('spellingBeeScores') || '[]'); } 
+  catch { return []; }
+}
+
+function saveScore(name, s) {
+  const scores = getScores();
+  scores.push({ name, score: s, date: new Date().toLocaleDateString() });
+  scores.sort((a, b) => b.score - a.score);
+  localStorage.setItem('spellingBeeScores', JSON.stringify(scores.slice(0, 50)));
+}
+
+function clearScores() {
+  if (confirm('Clear all scores?')) {
+    localStorage.removeItem('spellingBeeScores');
+    renderLeaderboard();
+  }
+}
+
+function renderLeaderboard() {
+  const scores = getScores();
+  const list = document.getElementById('leaderboard-list');
+  if (scores.length === 0) {
+    list.innerHTML = '<li class="empty-state">No scores yet — be the first! 🌟</li>';
+    return;
+  }
+  const medals = ['🥇','🥈','🥉'];
+  list.innerHTML = scores.slice(0, 10).map((s, i) => `
+    <li style="animation-delay:${i*0.05}s">
+      <div class="rank-badge">${medals[i] || (i+1)}</div>
+      <span style="flex:1">${escHtml(s.name)}</span>
+      <span style="font-size:0.85rem;color:#999">${s.date}</span>
+      <span class="score-pill">${s.score}/10</span>
+    </li>
+  `).join('');
+}
+
+function escHtml(s) { 
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); 
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goHome() {
+  speechSynth.cancel();
+  showScreen('screen-home');
+  renderLeaderboard();
+  switchTab('play');
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-play').style.display = tab === 'play' ? 'block' : 'none';
+  document.getElementById('tab-scores').style.display = tab === 'scores' ? 'block' : 'none';
+  document.querySelectorAll('.tab')[tab === 'play' ? 0 : 1].classList.add('active');
+  if (tab === 'scores') renderLeaderboard();
+}
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function selectMode(mode) {
+  gameMode = mode;
+  document.getElementById('mode-1p').classList.toggle('active', mode === 1);
+  document.getElementById('mode-2p').classList.toggle('active', mode === 2);
+  document.getElementById('p2-input').style.display = mode === 2 ? 'block' : 'none';
+  document.getElementById('player-name').placeholder = mode === 2 ? 'Player 1 name...' : 'Enter your name...';
+}
+
+function startQuiz() {
+  const nameInput = document.getElementById('player-name');
+  playerName = (nameInput.value.trim() || 'Player 1').slice(0, 20);
+
+  if (gameMode === 2) {
+    const p2Input = document.getElementById('player2-name');
+    player2Name = (p2Input.value.trim() || 'Player 2').slice(0, 20);
+    quizWords = shuffle(WORDS).slice(0, 10); // 5 per player, 10 total
+  } else {
+    quizWords = shuffle(WORDS).slice(0, 10);
+  }
+
+  currentQ = 0;
+  score = 0;
+  scores = [0, 0];
+  currentPlayer = 0;
+  answers = [];
+  showScreen('screen-quiz');
+  loadQuestion();
+}
+
+function loadQuestion() {
+  answered = false;
+  const w = quizWords[currentQ];
+
+  // Player indicator for 2P mode
+  const indicator = document.getElementById('player-indicator');
+  if (gameMode === 2) {
+    const name = currentPlayer === 0 ? playerName : player2Name;
+    indicator.textContent = `${currentPlayer === 0 ? '👤' : '👥'} ${name}'s turn`;
+    indicator.className = `player-indicator ${currentPlayer === 0 ? 'p1' : 'p2'}`;
+    indicator.style.display = 'block';
+    document.getElementById('q-score').textContent = `${playerName}: ${scores[0]}  |  ${player2Name}: ${scores[1]}`;
+  } else {
+    indicator.style.display = 'none';
+    document.getElementById('q-score').textContent = `Score: ${score}`;
+  }
+
+  document.getElementById('q-counter').textContent = `Question ${currentQ + 1} of 10`;
+  document.getElementById('progress-bar').style.width = `${(currentQ / 10) * 100}%`;
+
+  const input = document.getElementById('spell-input');
+  input.value = '';
+  input.className = 'spell-input';
+  input.disabled = false;
+  input.focus();
+
+  document.getElementById('hint-card').classList.remove('show');
+  document.getElementById('hint-card').textContent = '';
+  document.getElementById('feedback-banner').className = 'feedback-banner';
+  document.getElementById('feedback-banner').innerHTML = '';
+
+  document.getElementById('submit-btn').style.display = 'inline-block';
+  document.getElementById('next-btn').style.display = 'none';
+
+  const listenBtn = document.getElementById('listen-btn');
+  listenBtn.classList.remove('speaking');
+
+  // Auto-speak after a short delay
+  setTimeout(() => speakWord(), 600);
+}
+
+function speakWord(rate = 0.85) {
+  if (!window.speechSynthesis) return;
+  const w = quizWords[currentQ];
+  speechSynth.cancel();
+
+  const utter = new SpeechSynthesisUtterance(w.word);
+  utter.rate = rate;
+  utter.pitch = 1;
+  utter.lang = 'en-CA';
+
+  const isSlow = rate < 0.7;
+  const activeBtn = document.getElementById(isSlow ? 'listen-slow-btn' : 'listen-btn');
+  activeBtn.classList.add('speaking');
+  utter.onend = () => activeBtn.classList.remove('speaking');
+  utter.onerror = () => activeBtn.classList.remove('speaking');
+
+  speechSynth.speak(utter);
+}
+
+function speakWordSlowly() {
+  speakWord(0.4);
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter') {
+    if (answered) nextQuestion();
+    else submitAnswer();
+  }
+}
+
+function submitAnswer() {
+  if (answered) return;
+
+  const input = document.getElementById('spell-input');
+  const userAnswer = input.value.trim().toLowerCase();
+  if (!userAnswer) {
+    input.classList.add('shake');
+    setTimeout(() => input.classList.remove('shake'), 300);
+    return;
+  }
+
+  const w = quizWords[currentQ];
+  const correct = userAnswer === w.word.toLowerCase();
+  answered = true;
+
+  input.disabled = true;
+  document.getElementById('submit-btn').style.display = 'none';
+  document.getElementById('next-btn').style.display = 'inline-block';
+
+  const hint = document.getElementById('hint-card');
+  hint.textContent = `💡 ${w.def}`;
+  hint.classList.add('show');
+
+  const fb = document.getElementById('feedback-banner');
+
+  if (correct) {
+    score++;
+    if (gameMode === 2) scores[currentPlayer]++;
+    input.classList.add('correct', 'bounce');
+    fb.className = 'feedback-banner correct';
+    fb.innerHTML = getCorrectMessage();
+    playSound('correct');
+  } else {
+    input.classList.add('incorrect', 'shake');
+    fb.className = 'feedback-banner incorrect';
+    fb.innerHTML = `❌ Not quite!<div class="correct-answer">✅ Correct spelling: <strong>${w.word}</strong></div>`;
+    playSound('wrong');
+  }
+
+  answers.push({ word: w.word, userAnswer, correct, def: w.def, player: currentPlayer });
+
+  if (gameMode === 2) {
+    document.getElementById('q-score').textContent = `${playerName}: ${scores[0]}  |  ${player2Name}: ${scores[1]}`;
+  } else {
+    document.getElementById('q-score').textContent = `Score: ${score}`;
+  }
+}
+
+function nextQuestion() {
+  speechSynth.cancel();
+  currentQ++;
+  if (gameMode === 2) currentPlayer = currentQ % 2;
+  if (currentQ >= 10) showResults();
+  else loadQuestion();
+}
+
+function getCorrectMessage() {
+  return '🌟 You are smart!';
+}
+
+// ============================================================
+// SOUNDS
+// ============================================================
+function playSound(type) {
+  if (type === 'correct') {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.setValueAtTime(523, ctx.currentTime);
+      osc.frequency.setValueAtTime(659, ctx.currentTime + 0.1);
+      osc.frequency.setValueAtTime(784, ctx.currentTime + 0.2);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.4);
+    } catch(e) {}
+  } else {
+    playFartSound();
+  }
+}
+
+function playFartSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const duration = 0.7;
+    const bufferSize = Math.ceil(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    // Fill with noise
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+
+    // Low-pass filter sweeping down for bubbly fart quality
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(500, ctx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + duration);
+    filter.Q.value = 15;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(2.0, ctx.currentTime + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    source.start(ctx.currentTime);
+    source.stop(ctx.currentTime + duration);
+  } catch(e) {}
+}
+
+// ============================================================
+// RESULTS
+// ============================================================
+function showResults() {
+  showScreen('screen-results');
+  document.getElementById('progress-bar').style.width = '100%';
+
+  const breakdown = document.getElementById('results-breakdown');
+  let msg, sub;
+
+  if (gameMode === 2) {
+    // Hide 1P, show 2P layout
+    document.getElementById('results-1p').style.display = 'none';
+    document.getElementById('results-2p').style.display = 'block';
+
+    document.getElementById('result-p1-name').textContent = playerName;
+    document.getElementById('result-p1-score').textContent = scores[0];
+    document.getElementById('result-p2-name').textContent = player2Name;
+    document.getElementById('result-p2-score').textContent = scores[1];
+
+    // Highlight winner
+    document.getElementById('result-p1-card').classList.toggle('winner', scores[0] > scores[1]);
+    document.getElementById('result-p2-card').classList.toggle('winner', scores[1] > scores[0]);
+
+    if (scores[0] > scores[1]) {
+      msg = `🏆 ${playerName} wins!`;
+      sub = `${scores[0]} vs ${scores[1]} — well played!`;
+    } else if (scores[1] > scores[0]) {
+      msg = `🏆 ${player2Name} wins!`;
+      sub = `${scores[1]} vs ${scores[0]} — well played!`;
+    } else {
+      msg = `🤝 It's a tie!`;
+      sub = `${scores[0]} each — neck and neck!`;
+    }
+
+    saveScore(playerName, scores[0]);
+    saveScore(player2Name, scores[1]);
+
+    breakdown.innerHTML = answers.map((a, i) => `
+      <li class="${a.correct ? 'r-correct' : 'r-wrong'}" style="animation-delay:${i*0.05}s">
+        <span class="result-icon">${a.correct ? '✅' : '❌'}</span>
+        <span class="result-word">${a.word}</span>
+        <span style="font-size:0.8rem;color:#888;font-weight:700">${a.player === 0 ? playerName : player2Name}</span>
+        ${!a.correct ? `<span class="result-answer">wrote: "${a.userAnswer}"</span>` : ''}
+      </li>
+    `).join('');
+
+    playSound(scores[0] !== scores[1] ? 'correct' : 'wrong');
+
+  } else {
+    // 1P layout
+    document.getElementById('results-1p').style.display = 'block';
+    document.getElementById('results-2p').style.display = 'none';
+    document.getElementById('final-score').textContent = score;
+
+    const pct = score / 10;
+    if (pct === 1)       { msg = '🏆 Perfect Score!'; sub = 'You got every single word right!'; }
+    else if (pct >= 0.8) { msg = '🌟 Amazing job!'; sub = 'You\'re ready for the Spelling Bee!'; }
+    else if (pct >= 0.6) { msg = '👍 Good work!'; sub = 'Keep practicing and you\'ll ace it!'; }
+    else if (pct >= 0.4) { msg = '💪 Keep going!'; sub = 'Practice makes perfect!'; }
+    else                 { msg = '🐝 Keep buzzing!'; sub = 'Every expert was once a beginner!'; }
+
+    saveScore(playerName, score);
+
+    breakdown.innerHTML = answers.map((a, i) => `
+      <li class="${a.correct ? 'r-correct' : 'r-wrong'}" style="animation-delay:${i*0.05}s">
+        <span class="result-icon">${a.correct ? '✅' : '❌'}</span>
+        <span class="result-word">${a.word}</span>
+        ${!a.correct ? `<span class="result-answer">you wrote: "${a.userAnswer}"</span>` : ''}
+      </li>
+    `).join('');
+
+    playSound(score >= 7 ? 'correct' : 'wrong');
+  }
+
+  document.getElementById('result-message').textContent = msg;
+  document.getElementById('result-sub').textContent = sub;
+}
+
+// ============================================================
+// INIT
+// ============================================================
+renderLeaderboard();
+</script>
+</body>
+</html>
