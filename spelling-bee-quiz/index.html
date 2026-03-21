@@ -623,7 +623,7 @@ const WORDS = [
   {word:"abscise",def:"To cut off"},
   {word:"abstraction",def:"An abstract or general idea or term"},
   {word:"acclimate",def:"To become accustomed to a new environment"},
-  {word:"acknowledgment",def:"The recognition of something's existence or truth"},
+  {word:"acknowledgment",def:"The recognition of something's existence or truth",alts:["acknowledgement"]},
   {word:"adrenaline",def:"A hormone that increases your energy"},
   {word:"advancement",def:"The process of promoting a plan or a person"},
   {word:"aerophyte",def:"A plant that grows on another plant for support"},
@@ -673,7 +673,7 @@ const WORDS = [
   {word:"celeriac",def:"A type of celery that forms a large swollen root"},
   {word:"cerise",def:"A vibrant reddish-pink colour"},
   {word:"chalice",def:"A large cup or goblet"},
-  {word:"chaperone",def:"A person who accompanies and looks after another person"},
+  {word:"chaperone",def:"A person who accompanies and looks after another person",alts:["chaperon"]},
   {word:"chiton",def:"A gown or tunic worn in ancient Greece"},
   {word:"chronograph",def:"A stopwatch"},
   {word:"churlish",def:"Rude in a mean-spirited and surly way"},
@@ -864,7 +864,7 @@ const WORDS = [
   {word:"narrative",def:"A story or account of events or experiences"},
   {word:"necropolis",def:"A cemetery"},
   {word:"neolithic",def:"Relating to the last part of the Stone Age"},
-  {word:"nonjudgmental",def:"Refraining from criticizing others"},
+  {word:"nonjudgmental",def:"Refraining from criticizing others",alts:["nonjudgemental","non-judgmental","non-judgemental"]},
   {word:"notification",def:"A written or printed notice or announcement"},
   {word:"nouveau",def:"Modern or up-to-date"},
   {word:"nutrients",def:"Substances in food essential for the body to grow"},
@@ -954,7 +954,7 @@ const WORDS = [
   {word:"semiquaver",def:"A 16th note in musical notation"},
   {word:"sensational",def:"Extraordinarily good; phenomenal"},
   {word:"sequel",def:"A book or movie that continues the story of an earlier one"},
-  {word:"serialization",def:"The process of publishing a story in short installments"},
+  {word:"serialization",def:"The process of publishing a story in short installments",alts:["serialisation"]},
   {word:"shroud",def:"A thing that envelops or obscures something"},
   {word:"sifaka",def:"A type of lemur"},
   {word:"significant",def:"Expressing great meaning or indicative of something"},
@@ -996,7 +996,7 @@ const WORDS = [
   {word:"unshakable",def:"Unable to be disputed or questioned"},
   {word:"utopia",def:"Any real or imaginary society considered near-perfect or ideal"},
   {word:"vanguard",def:"A group of people leading the way in new developments"},
-  {word:"vaporize",def:"To turn something into a vapor or gas"},
+  {word:"vaporize",def:"To turn something into a vapor or gas",alts:["vaporise"]},
   {word:"varve",def:"A pair of thin bands of sediment deposited annually in glacial lakes"},
   {word:"velocity",def:"The speed of motion"},
   {word:"veracious",def:"Habitually truthful or honest"},
@@ -1005,7 +1005,7 @@ const WORDS = [
   {word:"vindicated",def:"Cleared of blame or suspicion"},
   {word:"vitality",def:"Exuberant physical strength or mental vigour"},
   {word:"volitive",def:"Expressing a wish or desire"},
-  {word:"vulcanize",def:"To treat rubber with sulfur and heat for greater strength"},
+  {word:"vulcanize",def:"To treat rubber with sulfur and heat for greater strength",alts:["vulcanise"]},
   {word:"wale",def:"A ridge or raised band in fabric"},
   {word:"wanton",def:"Maliciously and unnecessarily cruel or destructive"},
   {word:"wearisome",def:"Tiresome or tedious"},
@@ -1228,7 +1228,8 @@ function submitAnswer() {
   }
 
   const w = quizWords[currentQ];
-  const correct = userAnswer === w.word.toLowerCase();
+  const accepted = [w.word.toLowerCase(), ...(w.alts || []).map(a => a.toLowerCase())];
+  const correct = accepted.includes(userAnswer);
   answered = true;
 
   input.disabled = true;
@@ -1251,7 +1252,8 @@ function submitAnswer() {
   } else {
     input.classList.add('incorrect', 'shake');
     fb.className = 'feedback-banner incorrect';
-    fb.innerHTML = `❌ Not quite!<div class="correct-answer">✅ Correct spelling: <strong>${w.word}</strong></div>`;
+    const allAccepted = [w.word, ...(w.alts || [])].join(' or ');
+    fb.innerHTML = `❌ Not quite!<div class="correct-answer">✅ Correct spelling: <strong>${allAccepted}</strong></div>`;
     playSound('wrong');
   }
 
