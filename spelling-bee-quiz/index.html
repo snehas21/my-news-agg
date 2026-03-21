@@ -442,6 +442,35 @@
 
   .player-score-card .ps-label { font-size: 0.8rem; font-weight: 700; color: #777; }
 
+  /* ===== LOBBY ===== */
+  .lobby-list { list-style: none; margin: 8px 0 0; }
+  .lobby-list li {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; border-radius: 12px;
+    background: var(--cream); margin-bottom: 8px;
+    font-weight: 700; font-size: 0.95rem;
+    animation: fadeUp 0.3s ease both;
+  }
+  .lobby-list li .lobby-crown { font-size: 1.1rem; flex-shrink: 0; }
+  .lobby-list li .lobby-me { margin-left: auto; font-size: 0.8rem; color: var(--honey-dark); font-family: 'Fredoka One', cursive; }
+
+  /* ===== ONLINE RANKING ===== */
+  .online-ranking { list-style: none; margin: 0 0 16px; }
+  .online-ranking li {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border-radius: 14px;
+    margin-bottom: 8px; font-weight: 700;
+    animation: fadeUp 0.3s ease both;
+  }
+  .online-ranking li.rank-1 { background: #fff8dc; border: 2px solid #FFD700; }
+  .online-ranking li.rank-2 { background: #f5f5f5; border: 2px solid #ccc; }
+  .online-ranking li.rank-3 { background: #fff0e6; border: 2px solid #cd7f32; }
+  .online-ranking li.rank-other { background: var(--cream); border: 2px solid #e0e0e0; }
+  .online-ranking .rank-pos { font-family: 'Fredoka One', cursive; font-size: 1.2rem; width: 28px; text-align: center; flex-shrink: 0; }
+  .online-ranking .rank-name { flex: 1; font-family: 'Fredoka One', cursive; font-size: 1.05rem; }
+  .online-ranking .rank-score { font-family: 'Fredoka One', cursive; font-size: 1.4rem; color: var(--bee-black); }
+  .online-ranking .rank-me { font-size: 0.75rem; color: var(--honey-dark); font-weight: 800; }
+
   /* ===== EMPTY STATE ===== */
   .empty-state { text-align: center; color: #aaa; padding: 20px; font-weight: 700; }
 
@@ -605,14 +634,18 @@
           <div class="player-score-card p1" id="result-p1-card">
             <div class="ps-name" id="result-p1-name">Player 1</div>
             <div class="ps-num" id="result-p1-score">0</div>
-            <div class="ps-label">out of 5</div>
+            <div class="ps-label">out of 10</div>
           </div>
           <div class="player-score-card p2" id="result-p2-card">
             <div class="ps-name" id="result-p2-name">Player 2</div>
             <div class="ps-num" id="result-p2-score">0</div>
-            <div class="ps-label">out of 5</div>
+            <div class="ps-label">out of 10</div>
           </div>
         </div>
+      </div>
+      <!-- Online N-player layout -->
+      <div id="results-online" style="display:none">
+        <ul class="online-ranking" id="online-ranking-list"></ul>
       </div>
 
       <div class="result-message" id="result-message">Great job! 🎉</div>
@@ -627,14 +660,38 @@
     </div>
   </div>
 
-  <!-- WAITING SCREEN -->
+  <!-- WAITING / LOBBY SCREEN -->
   <div id="screen-waiting" class="screen">
-    <div class="card honey-border" style="text-align:center;padding:40px 32px">
-      <div class="section-title" style="justify-content:center;font-size:1.5rem">🔗 Room Created!</div>
-      <p style="color:#555;font-weight:600;margin-bottom:20px">Share this code with your friend:</p>
-      <div id="waiting-room-code" style="font-family:'Fredoka One',cursive;font-size:3rem;letter-spacing:10px;background:var(--honey);color:var(--bee-black);padding:20px 32px;border-radius:16px;display:inline-block;margin-bottom:20px;box-shadow:0 4px 0 var(--honey-dark)">------</div>
-      <p id="waiting-status" style="font-family:'Fredoka One',cursive;font-size:1.1rem;color:#888;margin-bottom:24px">Waiting for friend to join... 🔄</p>
-      <button class="btn btn-secondary btn-sm" onclick="cancelOnline()">Cancel</button>
+    <div class="card honey-border" style="padding:28px 24px">
+
+      <!-- Host view: show room code -->
+      <div id="host-lobby" style="display:none;text-align:center">
+        <div class="section-title" style="justify-content:center">🔗 Room Code</div>
+        <p style="color:#555;font-weight:600;margin-bottom:12px">Share this with everyone:</p>
+        <div id="waiting-room-code" style="font-family:'Fredoka One',cursive;font-size:2.8rem;letter-spacing:10px;background:var(--honey);color:var(--bee-black);padding:16px 28px;border-radius:16px;display:inline-block;margin-bottom:20px;box-shadow:0 4px 0 var(--honey-dark)">------</div>
+      </div>
+
+      <!-- Joiner view -->
+      <div id="joiner-lobby" style="display:none;text-align:center">
+        <div class="section-title" style="justify-content:center">✅ Joined!</div>
+        <p style="color:#555;font-weight:600;margin-bottom:16px">Waiting for the host to start the game...</p>
+      </div>
+
+      <!-- Player list (everyone sees this) -->
+      <div class="section-title" style="margin-top:4px">👥 Players in Room</div>
+      <ul class="lobby-list" id="lobby-player-list"></ul>
+
+      <!-- Host controls -->
+      <div id="host-start-controls" style="display:none;margin-top:16px">
+        <button class="btn btn-primary btn-full" id="host-start-btn" onclick="startOnlineGame()" disabled>
+          Start Game 🚀
+        </button>
+        <p id="lobby-hint" style="text-align:center;font-size:0.85rem;color:#aaa;margin-top:8px;font-weight:600">Need at least 1 more player to join...</p>
+      </div>
+
+      <div style="text-align:center;margin-top:16px">
+        <button class="btn btn-secondary btn-sm" onclick="cancelOnline()">Leave Room</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1065,13 +1122,15 @@ let currentPlayer = 0;    // 0 = P1, 1 = P2
 
 // Online multiplayer state
 let peer = null;
-let conn = null;
+let connections = [];         // host only: [{conn, playerIndex}]
 let onlineRole = '';          // 'host' or 'joiner'
-let remotePlayerName = '';
-let localAnsweredCurrent = false;
-let remoteAnsweredCurrent = false;
+let players = [];             // [{name}] — index 0 = host
+let myPlayerIndex = 0;        // this device's index in players[]
+let answeredThisQuestion = new Set(); // playerIndexes who answered
 let advanceTimeout = null;
+let questionTimeout = null;
 let roomCode = '';
+const QUESTION_TIMEOUT_MS = 60000;
 
 // ============================================================
 // STORAGE
@@ -1127,7 +1186,6 @@ function showScreen(id) {
 
 function goHome() {
   speechSynth.cancel();
-  if (peer && gameMode !== 3) { peer.destroy(); peer = null; conn = null; onlineRole = ''; }
   showScreen('screen-home');
   renderLeaderboard();
   switchTab('play');
@@ -1203,6 +1261,7 @@ function loadQuestion() {
     indicator.style.display = 'none';
     clearRemoteStatus();
     updateOnlineScoreDisplay();
+    startQuestionTimer();
   } else {
     indicator.style.display = 'none';
     document.getElementById('q-score').textContent = `Score: ${score}`;
@@ -1257,8 +1316,8 @@ function speakWordSlowly() {
 
 function handleKey(e) {
   if (e.key === 'Enter') {
-    if (answered) nextQuestion();
-    else submitAnswer();
+    if (answered && gameMode !== 3) nextQuestion();
+    else if (!answered) submitAnswer();
   }
 }
 
@@ -1291,7 +1350,7 @@ function submitAnswer() {
   if (correct) {
     score++;
     if (gameMode === 2) scores[currentPlayer]++;
-    else if (gameMode === 3) scores[onlineRole === 'host' ? 0 : 1]++;
+    else if (gameMode === 3) scores[myPlayerIndex]++;
     input.classList.add('correct', 'bounce');
     fb.className = 'feedback-banner correct';
     fb.innerHTML = getCorrectMessage();
@@ -1304,20 +1363,23 @@ function submitAnswer() {
     playSound('wrong');
   }
 
-  answers.push({ word: w.word, userAnswer, correct, def: w.def, player: gameMode === 3 ? (onlineRole === 'host' ? 0 : 1) : currentPlayer });
+  answers.push({ word: w.word, userAnswer, correct, def: w.def, playerIndex: gameMode === 3 ? myPlayerIndex : currentPlayer });
 
   if (gameMode === 3) {
-    // Online mode: notify peer, then wait for them
-    conn.send({ type: 'PLAYER_ANSWERED', correct, word: w.word, userAnswer, def: w.def });
-    localAnsweredCurrent = true;
-    updateOnlineScoreDisplay();
     document.getElementById('next-btn').style.display = 'none';
-    if (remoteAnsweredCurrent) {
-      setRemoteStatus('Both answered! Moving on...');
-      if (onlineRole === 'host') scheduleAdvance();
+    answeredThisQuestion.add(myPlayerIndex);
+    updateOnlineScoreDisplay();
+
+    if (onlineRole === 'host') {
+      // Host records locally; broadcast to joiners; check if all done
+      answers[answers.length - 1].playerIndex = 0; // ensure host = 0
+      broadcastToAll({ type: 'PLAYER_ANSWERED', playerIndex: 0, playerName, correct });
+      checkAllAnswered();
     } else {
-      const otherName = onlineRole === 'host' ? player2Name : remotePlayerName;
-      setRemoteStatus(`Waiting for ${otherName}...`);
+      // Joiner sends answer to host
+      connections[0].conn.send({ type: 'PLAYER_ANSWERED', correct, word: w.word, userAnswer, def: w.def });
+      const remaining = players.length - answeredThisQuestion.size;
+      setRemoteStatus(remaining > 0 ? `Waiting for ${remaining} more player${remaining > 1 ? 's' : ''}...` : 'Everyone answered!');
     }
     return;
   }
@@ -1411,59 +1473,91 @@ function showResults() {
   const breakdown = document.getElementById('results-breakdown');
   let msg, sub;
 
-  if (gameMode === 2 || gameMode === 3) {
-    // 2P / Online layout
+  if (gameMode === 3) {
+    // Online N-player results
+    document.getElementById('results-1p').style.display = 'none';
+    document.getElementById('results-2p').style.display = 'none';
+    document.getElementById('results-online').style.display = 'block';
+
+    // Rank players by score
+    const ranked = players.map((p, i) => ({ name: p.name, score: scores[i], playerIndex: i }))
+      .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+
+    const topScore = ranked[0].score;
+    const winners = ranked.filter(p => p.score === topScore);
+    if (winners.length === 1) {
+      const isMe = winners[0].playerIndex === myPlayerIndex;
+      msg = isMe ? '🏆 You win!' : `🏆 ${escHtml(winners[0].name)} wins!`;
+    } else {
+      msg = `🤝 It's a tie!`;
+    }
+    sub = `${players.length} players — great game!`;
+
+    const rankSymbols = ['🥇', '🥈', '🥉'];
+    const rankClasses = ['rank-1', 'rank-2', 'rank-3'];
+    document.getElementById('online-ranking-list').innerHTML = ranked.map((p, i) => `
+      <li class="online-ranking ${rankClasses[i] || 'rank-other'}" style="animation-delay:${i*0.07}s">
+        <span class="rank-pos">${rankSymbols[i] || (i + 1)}</span>
+        <span class="rank-name">${escHtml(p.name)}</span>
+        ${p.playerIndex === myPlayerIndex ? '<span class="rank-me">you</span>' : ''}
+        <span class="rank-score">${p.score}<span style="font-size:0.75rem;color:#999">/10</span></span>
+      </li>`).join('');
+
+    ranked.forEach(p => saveScore(p.name, p.score));
+
+    // Word-by-word breakdown
+    breakdown.innerHTML = quizWords.map((qw, i) => {
+      const wordAnswers = answers.filter(a => a.word === qw.word);
+      const anyCorrect = wordAnswers.some(a => a.correct);
+      const detail = players.map((p, pi) => {
+        const a = wordAnswers.find(x => x.playerIndex === pi);
+        return `${escHtml(p.name)}: ${a ? (a.correct ? '✅' : `❌ ${a.userAnswer}`) : '—'}`;
+      }).join(' | ');
+      return `<li class="${anyCorrect ? 'r-correct' : 'r-wrong'}" style="animation-delay:${i*0.04}s">
+        <span class="result-icon">${anyCorrect ? '✅' : '❌'}</span>
+        <span class="result-word">${qw.word}</span>
+        <span style="font-size:0.75rem;color:#666;font-weight:700">${detail}</span>
+      </li>`;
+    }).join('');
+
+    playSound(winners.length === 1 ? 'correct' : 'wrong');
+
+  } else if (gameMode === 2) {
+    // 2P hot-seat layout
     document.getElementById('results-1p').style.display = 'none';
     document.getElementById('results-2p').style.display = 'block';
+    document.getElementById('results-online').style.display = 'none';
 
-    const p1Name = gameMode === 3 ? (onlineRole === 'host' ? playerName : remotePlayerName) : playerName;
-    const p2Name = gameMode === 3 ? (onlineRole === 'host' ? player2Name : playerName) : player2Name;
-
-    document.getElementById('result-p1-name').textContent = p1Name;
+    document.getElementById('result-p1-name').textContent = playerName;
     document.getElementById('result-p1-score').textContent = scores[0];
-    document.getElementById('result-p2-name').textContent = p2Name;
+    document.getElementById('result-p2-name').textContent = player2Name;
     document.getElementById('result-p2-score').textContent = scores[1];
 
-    // Highlight winner
     document.getElementById('result-p1-card').classList.toggle('winner', scores[0] > scores[1]);
     document.getElementById('result-p2-card').classList.toggle('winner', scores[1] > scores[0]);
 
     if (scores[0] > scores[1]) {
-      msg = `🏆 ${p1Name} wins!`;
+      msg = `🏆 ${playerName} wins!`;
       sub = `${scores[0]} vs ${scores[1]} — well played!`;
     } else if (scores[1] > scores[0]) {
-      msg = `🏆 ${p2Name} wins!`;
+      msg = `🏆 ${player2Name} wins!`;
       sub = `${scores[1]} vs ${scores[0]} — well played!`;
     } else {
       msg = `🤝 It's a tie!`;
       sub = `${scores[0]} each — neck and neck!`;
     }
 
-    saveScore(p1Name, scores[0]);
-    saveScore(p2Name, scores[1]);
+    saveScore(playerName, scores[0]);
+    saveScore(player2Name, scores[1]);
 
-    if (gameMode === 3) {
-      // Online: show per-word results grouped (host=p0, joiner=p1)
-      breakdown.innerHTML = quizWords.map((qw, i) => {
-        const p1a = answers.find(a => a.word === qw.word && a.player === 0);
-        const p2a = answers.find(a => a.word === qw.word && a.player === 1);
-        const anyCorrect = p1a?.correct || p2a?.correct;
-        return `<li class="${anyCorrect ? 'r-correct' : 'r-wrong'}" style="animation-delay:${i*0.05}s">
-          <span class="result-icon">${p1a?.correct ? '✅' : '❌'}${p2a?.correct ? '✅' : '❌'}</span>
-          <span class="result-word">${qw.word}</span>
-          <span style="font-size:0.75rem;color:#666;font-weight:700">${p1Name}: ${p1a?.userAnswer || '—'} | ${p2Name}: ${p2a?.userAnswer || '—'}</span>
-        </li>`;
-      }).join('');
-    } else {
-      breakdown.innerHTML = answers.map((a, i) => `
-        <li class="${a.correct ? 'r-correct' : 'r-wrong'}" style="animation-delay:${i*0.05}s">
-          <span class="result-icon">${a.correct ? '✅' : '❌'}</span>
-          <span class="result-word">${a.word}</span>
-          <span style="font-size:0.8rem;color:#888;font-weight:700">${a.player === 0 ? playerName : player2Name}</span>
-          ${!a.correct ? `<span class="result-answer">wrote: "${a.userAnswer}"</span>` : ''}
-        </li>
-      `).join('');
-    }
+    breakdown.innerHTML = answers.map((a, i) => `
+      <li class="${a.correct ? 'r-correct' : 'r-wrong'}" style="animation-delay:${i*0.05}s">
+        <span class="result-icon">${a.correct ? '✅' : '❌'}</span>
+        <span class="result-word">${a.word}</span>
+        <span style="font-size:0.8rem;color:#888;font-weight:700">${a.playerIndex === 0 ? playerName : player2Name}</span>
+        ${!a.correct ? `<span class="result-answer">wrote: "${a.userAnswer}"</span>` : ''}
+      </li>
+    `).join('');
 
     playSound(scores[0] !== scores[1] ? 'correct' : 'wrong');
 
@@ -1471,6 +1565,7 @@ function showResults() {
     // 1P layout
     document.getElementById('results-1p').style.display = 'block';
     document.getElementById('results-2p').style.display = 'none';
+    document.getElementById('results-online').style.display = 'none';
     document.getElementById('final-score').textContent = score;
 
     const pct = score / 10;
@@ -1521,14 +1616,24 @@ function createRoom() {
   peer = new Peer(code.toLowerCase(), { debug: 0 });
 
   peer.on('open', () => {
+    players = [{ name: playerName }]; // host is index 0
+    scores = [0];
     document.getElementById('waiting-room-code').textContent = code;
+    document.getElementById('host-lobby').style.display = 'block';
+    document.getElementById('joiner-lobby').style.display = 'none';
+    document.getElementById('host-start-controls').style.display = 'block';
+    updateLobbyDisplay();
     showScreen('screen-waiting');
   });
 
   peer.on('connection', (c) => {
-    conn = c;
-    conn.on('data', handleHostReceive);
-    conn.on('close', handleDisconnect);
+    const entry = { conn: c, playerIndex: -1 };
+    connections.push(entry);
+    c.on('data', (data) => handleHostReceive(data, c));
+    c.on('close', () => {
+      // Remove from connections on disconnect (only relevant in lobby)
+      connections = connections.filter(x => x.conn !== c);
+    });
   });
 
   peer.on('error', (err) => {
@@ -1551,10 +1656,10 @@ function joinRoom() {
     alert('PeerJS not loaded. Please check your internet connection and try again.');
     return;
   }
-  const name = (document.getElementById('player-name').value.trim() || 'Player 2').slice(0, 20);
+  const name = (document.getElementById('player-name').value.trim() || 'Player').slice(0, 20);
   const codeRaw = document.getElementById('room-code-input').value.trim().toUpperCase();
   if (codeRaw.length < 4) {
-    alert('Please enter the room code shown on the other player\'s screen.');
+    alert('Please enter the room code shown on the host\'s screen.');
     return;
   }
   playerName = name;
@@ -1563,78 +1668,121 @@ function joinRoom() {
 
   peer = new Peer({ debug: 0 });
   peer.on('open', () => {
-    conn = peer.connect(codeRaw.toLowerCase(), { reliable: true });
-    conn.on('open', () => conn.send({ type: 'JOIN', name: playerName }));
-    conn.on('data', handleJoinerReceive);
-    conn.on('close', handleDisconnect);
+    const c = peer.connect(codeRaw.toLowerCase(), { reliable: true });
+    c.on('open', () => {
+      c.send({ type: 'JOIN', name: playerName });
+      // Show lobby in joiner mode
+      document.getElementById('host-lobby').style.display = 'none';
+      document.getElementById('joiner-lobby').style.display = 'block';
+      document.getElementById('host-start-controls').style.display = 'none';
+      showScreen('screen-waiting');
+    });
+    c.on('data', handleJoinerReceive);
+    c.on('close', () => handleDisconnect('Host'));
+    connections.push({ conn: c, playerIndex: -1 }); // joiner only uses connections[0].conn
   });
   peer.on('error', (err) => {
-    if (err.type === 'peer-unavailable') {
-      alert('Room not found. Check the code and try again.');
-    } else {
-      alert('Error: ' + err.message);
-    }
+    if (err.type === 'peer-unavailable') alert('Room not found. Check the code and try again.');
+    else alert('Error: ' + err.message);
     cancelOnline();
   });
 }
 
-function handleHostReceive(data) {
+// ---- HOST SIDE ----
+
+function handleHostReceive(data, senderConn) {
+  const entry = connections.find(c => c.conn === senderConn);
+  if (!entry) return;
+
   if (data.type === 'JOIN') {
-    remotePlayerName = data.name;
-    player2Name = data.name;
-    document.getElementById('waiting-status').textContent = `${data.name} joined! Starting... 🚀`;
-    setTimeout(startOnlineGame, 1200);
+    entry.playerIndex = players.length;
+    players.push({ name: data.name });
+    scores.push(0);
+    broadcastToAll({ type: 'PLAYER_LIST', players: players.map(p => p.name) });
+    updateLobbyDisplay();
 
   } else if (data.type === 'PLAYER_ANSWERED') {
-    if (data.correct) scores[1]++;
-    answers.push({ word: data.word, userAnswer: data.userAnswer, correct: data.correct, def: data.def, player: 1 });
-    remoteAnsweredCurrent = true;
+    const pi = entry.playerIndex;
+    if (answeredThisQuestion.has(pi)) return; // ignore duplicates
+    if (data.correct) scores[pi]++;
+    answers.push({ word: data.word, userAnswer: data.userAnswer, correct: data.correct, def: data.def, playerIndex: pi });
+    answeredThisQuestion.add(pi);
+    broadcastToAll({ type: 'PLAYER_ANSWERED', playerIndex: pi, playerName: players[pi].name, correct: data.correct });
     updateOnlineScoreDisplay();
-    setRemoteStatus(`${player2Name} answered ${data.correct ? '✅' : '❌'}`);
-    if (localAnsweredCurrent) scheduleAdvance();
+    checkAllAnswered();
   }
 }
 
+function checkAllAnswered() {
+  const remaining = players.length - answeredThisQuestion.size;
+  if (remaining <= 0) {
+    if (questionTimeout) { clearTimeout(questionTimeout); questionTimeout = null; }
+    setRemoteStatus('Everyone answered! Next word...');
+    scheduleAdvance();
+  } else {
+    setRemoteStatus(`Waiting for ${remaining} more player${remaining > 1 ? 's' : ''}...`);
+  }
+}
+
+// ---- JOINER SIDE ----
+
 function handleJoinerReceive(data) {
-  if (data.type === 'GAME_START') {
+  if (data.type === 'PLAYER_LIST') {
+    players = data.players.map(name => ({ name }));
+    myPlayerIndex = players.findIndex(p => p.name === playerName);
+    scores = new Array(players.length).fill(0);
+    updateLobbyDisplay();
+
+  } else if (data.type === 'GAME_START') {
     quizWords = data.words;
-    remotePlayerName = data.p1name;
-    player2Name = data.p1name;
-    scores = [0, 0];
+    players = data.players.map(name => ({ name }));
+    myPlayerIndex = data.myIndex;
+    scores = new Array(players.length).fill(0);
     answers = [];
     currentQ = 0;
-    localAnsweredCurrent = false;
-    remoteAnsweredCurrent = false;
+    answeredThisQuestion = new Set();
     showScreen('screen-quiz');
     loadQuestion();
 
   } else if (data.type === 'PLAYER_ANSWERED') {
-    remoteAnsweredCurrent = true;
-    setRemoteStatus(`${remotePlayerName} answered ${data.correct ? '✅' : '❌'}`);
+    answeredThisQuestion.add(data.playerIndex);
+    const remaining = players.length - answeredThisQuestion.size;
+    if (remaining <= 0) {
+      setRemoteStatus('Everyone answered! Next word...');
+    } else {
+      setRemoteStatus(`${data.playerName} answered ${data.correct ? '✅' : '❌'} — ${remaining} left`);
+    }
 
   } else if (data.type === 'NEXT_QUESTION') {
     scores = data.scores;
     currentQ = data.nextIndex;
-    localAnsweredCurrent = false;
-    remoteAnsweredCurrent = false;
+    answeredThisQuestion = new Set();
     if (data.answers) answers = data.answers;
-    if (currentQ >= 10) {
-      showResults();
-    } else {
-      loadQuestion();
-    }
+    clearRemoteStatus();
+    if (currentQ >= 10) showResults();
+    else loadQuestion();
   }
 }
 
+// ---- SHARED ----
+
+function broadcastToAll(data) {
+  connections.forEach(c => { try { c.conn.send(data); } catch(e) {} });
+}
+
 function startOnlineGame() {
+  if (onlineRole !== 'host') return;
   quizWords = shuffle(WORDS).slice(0, 10);
   currentQ = 0;
   score = 0;
-  scores = [0, 0];
+  scores = new Array(players.length).fill(0);
   answers = [];
-  localAnsweredCurrent = false;
-  remoteAnsweredCurrent = false;
-  conn.send({ type: 'GAME_START', words: quizWords, p1name: playerName, p2name: player2Name });
+  answeredThisQuestion = new Set();
+
+  // Tell each joiner their own player index
+  connections.forEach(c => {
+    try { c.conn.send({ type: 'GAME_START', words: quizWords, players: players.map(p => p.name), myIndex: c.playerIndex }); } catch(e) {}
+  });
   showScreen('screen-quiz');
   loadQuestion();
 }
@@ -1646,17 +1794,44 @@ function scheduleAdvance() {
     const nextIndex = currentQ + 1;
     const payload = { type: 'NEXT_QUESTION', nextIndex, scores };
     if (nextIndex >= 10) payload.answers = answers;
-    conn.send(payload);
+    broadcastToAll(payload);
     currentQ = nextIndex;
-    localAnsweredCurrent = false;
-    remoteAnsweredCurrent = false;
+    answeredThisQuestion = new Set();
     clearRemoteStatus();
-    if (currentQ >= 10) {
-      showResults();
-    } else {
-      loadQuestion();
-    }
-  }, 2000);
+    if (currentQ >= 10) showResults();
+    else loadQuestion();
+  }, 2500);
+}
+
+function startQuestionTimer() {
+  if (questionTimeout) clearTimeout(questionTimeout);
+  if (onlineRole === 'host') {
+    questionTimeout = setTimeout(() => {
+      questionTimeout = null;
+      setRemoteStatus('Time\'s up! Moving on...');
+      scheduleAdvance();
+    }, QUESTION_TIMEOUT_MS);
+  }
+}
+
+function updateLobbyDisplay() {
+  const list = document.getElementById('lobby-player-list');
+  if (!list) return;
+  list.innerHTML = players.map((p, i) => `
+    <li style="animation-delay:${i*0.06}s">
+      <span class="lobby-crown">${i === 0 ? '👑' : '👤'}</span>
+      <span>${escHtml(p.name)}${i === 0 ? ' <em style="font-weight:600;color:#aaa;font-style:normal;font-size:0.8rem">(host)</em>' : ''}</span>
+      ${p.name === playerName ? '<span class="lobby-me">you</span>' : ''}
+    </li>`).join('');
+
+  // Update start button state (host only)
+  const btn = document.getElementById('host-start-btn');
+  const hint = document.getElementById('lobby-hint');
+  if (btn) {
+    const canStart = players.length >= 2;
+    btn.disabled = !canStart;
+    if (hint) hint.style.display = canStart ? 'none' : 'block';
+  }
 }
 
 function setRemoteStatus(msg) {
@@ -1670,25 +1845,27 @@ function clearRemoteStatus() {
 }
 
 function updateOnlineScoreDisplay() {
-  const myScore = scores[onlineRole === 'host' ? 0 : 1];
-  const theirScore = scores[onlineRole === 'host' ? 1 : 0];
-  const theirName = onlineRole === 'host' ? player2Name : remotePlayerName;
-  document.getElementById('q-score').textContent = `${playerName}: ${myScore}  |  ${theirName}: ${theirScore}`;
+  const parts = players.map((p, i) => `${p.name}: ${scores[i]}`);
+  document.getElementById('q-score').textContent = parts.join('  |  ');
 }
 
-function handleDisconnect() {
+function handleDisconnect(name) {
   const active = document.querySelector('.screen.active');
   if (active && active.id !== 'screen-home') {
-    alert('⚠️ Connection lost. The other player disconnected.');
-    cancelOnline();
+    alert(`⚠️ ${name || 'A player'} disconnected.`);
   }
 }
 
 function cancelOnline() {
   if (advanceTimeout) { clearTimeout(advanceTimeout); advanceTimeout = null; }
+  if (questionTimeout) { clearTimeout(questionTimeout); questionTimeout = null; }
+  connections.forEach(c => { try { c.conn.close(); } catch(e) {} });
+  connections = [];
   if (peer) { peer.destroy(); peer = null; }
-  conn = null;
+  players = [];
+  scores = [];
   onlineRole = '';
+  answeredThisQuestion = new Set();
   goHome();
 }
 
