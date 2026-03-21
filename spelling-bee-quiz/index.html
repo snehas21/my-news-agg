@@ -372,20 +372,21 @@
   /* ===== MODE SELECTOR ===== */
   .mode-selector {
     display: flex;
-    gap: 10px;
+    gap: 8px;
   }
 
   .mode-btn {
     flex: 1;
-    padding: 12px;
+    padding: 10px 6px;
     border-radius: 14px;
     font-family: 'Fredoka One', cursive;
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     cursor: pointer;
     border: 3px solid #e0e0e0;
     background: var(--cream);
     color: #aaa;
     transition: all 0.2s;
+    text-align: center;
   }
 
   .mode-btn.active {
@@ -496,17 +497,30 @@
       <div class="card honey-border">
         <div class="section-title">🎮 Game Mode</div>
         <div class="mode-selector">
-          <button class="mode-btn active" id="mode-1p" onclick="selectMode(1)">👤 1 Player</button>
-          <button class="mode-btn" id="mode-2p" onclick="selectMode(2)">👥 2 Players</button>
+          <button class="mode-btn active" id="mode-1p" onclick="selectMode(1)">👤 Solo</button>
+          <button class="mode-btn" id="mode-2p" onclick="selectMode(2)">👥 Pass &amp; Play</button>
+          <button class="mode-btn" id="mode-online" onclick="selectMode(3)">🌐 Online</button>
         </div>
         <br>
         <div class="section-title">👤 Who's playing?</div>
-        <input type="text" class="name-input" id="player-name" placeholder="Player 1 name..." maxlength="20">
+        <input type="text" class="name-input" id="player-name" placeholder="Enter your name..." maxlength="20">
         <div id="p2-input" style="display:none;margin-top:12px">
           <input type="text" class="name-input" id="player2-name" placeholder="Player 2 name..." maxlength="20">
         </div>
+        <div id="online-options" style="display:none;margin-top:16px">
+          <div style="display:flex;gap:10px;margin-bottom:10px">
+            <button class="btn btn-secondary" style="flex:1;padding:12px 8px;font-size:1rem" onclick="createRoom()">🏠 Create Room</button>
+            <button class="btn btn-secondary" style="flex:1;padding:12px 8px;font-size:1rem" onclick="showJoinForm()">🚪 Join Room</button>
+          </div>
+          <div id="join-form" style="display:none">
+            <input type="text" class="name-input" id="room-code-input" placeholder="Room code (6 chars)..." maxlength="6"
+              style="text-transform:uppercase;letter-spacing:6px;text-align:center;font-family:'Fredoka One',cursive;font-size:1.4rem">
+            <br><br>
+            <button class="btn btn-primary btn-full" onclick="joinRoom()">Join Game 🎮</button>
+          </div>
+        </div>
         <br><br>
-        <button class="btn btn-primary btn-full" onclick="startQuiz()">Start Quiz! 🚀</button>
+        <button class="btn btn-primary btn-full" id="start-btn" onclick="startQuiz()">Start Quiz! 🚀</button>
       </div>
 
       <div class="card">
@@ -535,6 +549,7 @@
   <!-- QUIZ SCREEN -->
   <div id="screen-quiz" class="screen">
     <div id="player-indicator" class="player-indicator"></div>
+    <div id="remote-status" style="display:none;text-align:center;padding:8px 16px;border-radius:12px;background:#e8f0fe;font-family:'Fredoka One',cursive;font-size:1rem;color:#1a73e8;margin-bottom:10px"></div>
     <div class="quiz-meta">
       <span id="q-counter">Question 1 of 10</span>
       <span id="q-score">Score: 0</span>
@@ -609,6 +624,17 @@
         <button class="btn btn-primary" onclick="startQuiz()">Play Again 🔄</button>
         <button class="btn btn-secondary" onclick="goHome()">Home 🏠</button>
       </div>
+    </div>
+  </div>
+
+  <!-- WAITING SCREEN -->
+  <div id="screen-waiting" class="screen">
+    <div class="card honey-border" style="text-align:center;padding:40px 32px">
+      <div class="section-title" style="justify-content:center;font-size:1.5rem">🔗 Room Created!</div>
+      <p style="color:#555;font-weight:600;margin-bottom:20px">Share this code with your friend:</p>
+      <div id="waiting-room-code" style="font-family:'Fredoka One',cursive;font-size:3rem;letter-spacing:10px;background:var(--honey);color:var(--bee-black);padding:20px 32px;border-radius:16px;display:inline-block;margin-bottom:20px;box-shadow:0 4px 0 var(--honey-dark)">------</div>
+      <p id="waiting-status" style="font-family:'Fredoka One',cursive;font-size:1.1rem;color:#888;margin-bottom:24px">Waiting for friend to join... 🔄</p>
+      <button class="btn btn-secondary btn-sm" onclick="cancelOnline()">Cancel</button>
     </div>
   </div>
 </div>
@@ -1032,10 +1058,20 @@ let answered = false;
 let speechSynth = window.speechSynthesis;
 
 // Two-player state
-let gameMode = 1;         // 1 or 2
+let gameMode = 1;         // 1, 2, or 3 (online)
 let player2Name = '';
 let scores = [0, 0];      // [p1score, p2score]
 let currentPlayer = 0;    // 0 = P1, 1 = P2
+
+// Online multiplayer state
+let peer = null;
+let conn = null;
+let onlineRole = '';          // 'host' or 'joiner'
+let remotePlayerName = '';
+let localAnsweredCurrent = false;
+let remoteAnsweredCurrent = false;
+let advanceTimeout = null;
+let roomCode = '';
 
 // ============================================================
 // STORAGE
@@ -1091,9 +1127,11 @@ function showScreen(id) {
 
 function goHome() {
   speechSynth.cancel();
+  if (peer && gameMode !== 3) { peer.destroy(); peer = null; conn = null; onlineRole = ''; }
   showScreen('screen-home');
   renderLeaderboard();
   switchTab('play');
+  selectMode(1);
 }
 
 function switchTab(tab) {
@@ -1120,8 +1158,12 @@ function selectMode(mode) {
   gameMode = mode;
   document.getElementById('mode-1p').classList.toggle('active', mode === 1);
   document.getElementById('mode-2p').classList.toggle('active', mode === 2);
+  document.getElementById('mode-online').classList.toggle('active', mode === 3);
   document.getElementById('p2-input').style.display = mode === 2 ? 'block' : 'none';
+  document.getElementById('online-options').style.display = mode === 3 ? 'block' : 'none';
+  document.getElementById('start-btn').style.display = mode === 3 ? 'none' : 'block';
   document.getElementById('player-name').placeholder = mode === 2 ? 'Player 1 name...' : 'Enter your name...';
+  if (mode !== 3) document.getElementById('join-form').style.display = 'none';
 }
 
 function startQuiz() {
@@ -1157,6 +1199,10 @@ function loadQuestion() {
     indicator.className = `player-indicator ${currentPlayer === 0 ? 'p1' : 'p2'}`;
     indicator.style.display = 'block';
     document.getElementById('q-score').textContent = `${playerName}: ${scores[0]}  |  ${player2Name}: ${scores[1]}`;
+  } else if (gameMode === 3) {
+    indicator.style.display = 'none';
+    clearRemoteStatus();
+    updateOnlineScoreDisplay();
   } else {
     indicator.style.display = 'none';
     document.getElementById('q-score').textContent = `Score: ${score}`;
@@ -1245,6 +1291,7 @@ function submitAnswer() {
   if (correct) {
     score++;
     if (gameMode === 2) scores[currentPlayer]++;
+    else if (gameMode === 3) scores[onlineRole === 'host' ? 0 : 1]++;
     input.classList.add('correct', 'bounce');
     fb.className = 'feedback-banner correct';
     fb.innerHTML = getCorrectMessage();
@@ -1257,7 +1304,23 @@ function submitAnswer() {
     playSound('wrong');
   }
 
-  answers.push({ word: w.word, userAnswer, correct, def: w.def, player: currentPlayer });
+  answers.push({ word: w.word, userAnswer, correct, def: w.def, player: gameMode === 3 ? (onlineRole === 'host' ? 0 : 1) : currentPlayer });
+
+  if (gameMode === 3) {
+    // Online mode: notify peer, then wait for them
+    conn.send({ type: 'PLAYER_ANSWERED', correct, word: w.word, userAnswer, def: w.def });
+    localAnsweredCurrent = true;
+    updateOnlineScoreDisplay();
+    document.getElementById('next-btn').style.display = 'none';
+    if (remoteAnsweredCurrent) {
+      setRemoteStatus('Both answered! Moving on...');
+      if (onlineRole === 'host') scheduleAdvance();
+    } else {
+      const otherName = onlineRole === 'host' ? player2Name : remotePlayerName;
+      setRemoteStatus(`Waiting for ${otherName}...`);
+    }
+    return;
+  }
 
   if (gameMode === 2) {
     document.getElementById('q-score').textContent = `${playerName}: ${scores[0]}  |  ${player2Name}: ${scores[1]}`;
@@ -1348,14 +1411,17 @@ function showResults() {
   const breakdown = document.getElementById('results-breakdown');
   let msg, sub;
 
-  if (gameMode === 2) {
-    // Hide 1P, show 2P layout
+  if (gameMode === 2 || gameMode === 3) {
+    // 2P / Online layout
     document.getElementById('results-1p').style.display = 'none';
     document.getElementById('results-2p').style.display = 'block';
 
-    document.getElementById('result-p1-name').textContent = playerName;
+    const p1Name = gameMode === 3 ? (onlineRole === 'host' ? playerName : remotePlayerName) : playerName;
+    const p2Name = gameMode === 3 ? (onlineRole === 'host' ? player2Name : playerName) : player2Name;
+
+    document.getElementById('result-p1-name').textContent = p1Name;
     document.getElementById('result-p1-score').textContent = scores[0];
-    document.getElementById('result-p2-name').textContent = player2Name;
+    document.getElementById('result-p2-name').textContent = p2Name;
     document.getElementById('result-p2-score').textContent = scores[1];
 
     // Highlight winner
@@ -1363,27 +1429,41 @@ function showResults() {
     document.getElementById('result-p2-card').classList.toggle('winner', scores[1] > scores[0]);
 
     if (scores[0] > scores[1]) {
-      msg = `🏆 ${playerName} wins!`;
+      msg = `🏆 ${p1Name} wins!`;
       sub = `${scores[0]} vs ${scores[1]} — well played!`;
     } else if (scores[1] > scores[0]) {
-      msg = `🏆 ${player2Name} wins!`;
+      msg = `🏆 ${p2Name} wins!`;
       sub = `${scores[1]} vs ${scores[0]} — well played!`;
     } else {
       msg = `🤝 It's a tie!`;
       sub = `${scores[0]} each — neck and neck!`;
     }
 
-    saveScore(playerName, scores[0]);
-    saveScore(player2Name, scores[1]);
+    saveScore(p1Name, scores[0]);
+    saveScore(p2Name, scores[1]);
 
-    breakdown.innerHTML = answers.map((a, i) => `
-      <li class="${a.correct ? 'r-correct' : 'r-wrong'}" style="animation-delay:${i*0.05}s">
-        <span class="result-icon">${a.correct ? '✅' : '❌'}</span>
-        <span class="result-word">${a.word}</span>
-        <span style="font-size:0.8rem;color:#888;font-weight:700">${a.player === 0 ? playerName : player2Name}</span>
-        ${!a.correct ? `<span class="result-answer">wrote: "${a.userAnswer}"</span>` : ''}
-      </li>
-    `).join('');
+    if (gameMode === 3) {
+      // Online: show per-word results grouped (host=p0, joiner=p1)
+      breakdown.innerHTML = quizWords.map((qw, i) => {
+        const p1a = answers.find(a => a.word === qw.word && a.player === 0);
+        const p2a = answers.find(a => a.word === qw.word && a.player === 1);
+        const anyCorrect = p1a?.correct || p2a?.correct;
+        return `<li class="${anyCorrect ? 'r-correct' : 'r-wrong'}" style="animation-delay:${i*0.05}s">
+          <span class="result-icon">${p1a?.correct ? '✅' : '❌'}${p2a?.correct ? '✅' : '❌'}</span>
+          <span class="result-word">${qw.word}</span>
+          <span style="font-size:0.75rem;color:#666;font-weight:700">${p1Name}: ${p1a?.userAnswer || '—'} | ${p2Name}: ${p2a?.userAnswer || '—'}</span>
+        </li>`;
+      }).join('');
+    } else {
+      breakdown.innerHTML = answers.map((a, i) => `
+        <li class="${a.correct ? 'r-correct' : 'r-wrong'}" style="animation-delay:${i*0.05}s">
+          <span class="result-icon">${a.correct ? '✅' : '❌'}</span>
+          <span class="result-word">${a.word}</span>
+          <span style="font-size:0.8rem;color:#888;font-weight:700">${a.player === 0 ? playerName : player2Name}</span>
+          ${!a.correct ? `<span class="result-answer">wrote: "${a.userAnswer}"</span>` : ''}
+        </li>
+      `).join('');
+    }
 
     playSound(scores[0] !== scores[1] ? 'correct' : 'wrong');
 
@@ -1418,9 +1498,205 @@ function showResults() {
 }
 
 // ============================================================
+// ONLINE MULTIPLAYER (PeerJS)
+// ============================================================
+function generateCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+function createRoom() {
+  if (typeof Peer === 'undefined') {
+    alert('PeerJS not loaded. Please check your internet connection and try again.');
+    return;
+  }
+  const name = (document.getElementById('player-name').value.trim() || 'Player 1').slice(0, 20);
+  playerName = name;
+  onlineRole = 'host';
+  const code = generateCode();
+  roomCode = code;
+
+  peer = new Peer(code.toLowerCase(), { debug: 0 });
+
+  peer.on('open', () => {
+    document.getElementById('waiting-room-code').textContent = code;
+    showScreen('screen-waiting');
+  });
+
+  peer.on('connection', (c) => {
+    conn = c;
+    conn.on('data', handleHostReceive);
+    conn.on('close', handleDisconnect);
+  });
+
+  peer.on('error', (err) => {
+    if (err.type === 'unavailable-id') {
+      peer.destroy();
+      createRoom(); // retry with new code
+    } else {
+      alert('Connection error: ' + err.type + '. Please try again.');
+      cancelOnline();
+    }
+  });
+}
+
+function showJoinForm() {
+  document.getElementById('join-form').style.display = 'block';
+}
+
+function joinRoom() {
+  if (typeof Peer === 'undefined') {
+    alert('PeerJS not loaded. Please check your internet connection and try again.');
+    return;
+  }
+  const name = (document.getElementById('player-name').value.trim() || 'Player 2').slice(0, 20);
+  const codeRaw = document.getElementById('room-code-input').value.trim().toUpperCase();
+  if (codeRaw.length < 4) {
+    alert('Please enter the room code shown on the other player\'s screen.');
+    return;
+  }
+  playerName = name;
+  onlineRole = 'joiner';
+  roomCode = codeRaw;
+
+  peer = new Peer({ debug: 0 });
+  peer.on('open', () => {
+    conn = peer.connect(codeRaw.toLowerCase(), { reliable: true });
+    conn.on('open', () => conn.send({ type: 'JOIN', name: playerName }));
+    conn.on('data', handleJoinerReceive);
+    conn.on('close', handleDisconnect);
+  });
+  peer.on('error', (err) => {
+    if (err.type === 'peer-unavailable') {
+      alert('Room not found. Check the code and try again.');
+    } else {
+      alert('Error: ' + err.message);
+    }
+    cancelOnline();
+  });
+}
+
+function handleHostReceive(data) {
+  if (data.type === 'JOIN') {
+    remotePlayerName = data.name;
+    player2Name = data.name;
+    document.getElementById('waiting-status').textContent = `${data.name} joined! Starting... 🚀`;
+    setTimeout(startOnlineGame, 1200);
+
+  } else if (data.type === 'PLAYER_ANSWERED') {
+    if (data.correct) scores[1]++;
+    answers.push({ word: data.word, userAnswer: data.userAnswer, correct: data.correct, def: data.def, player: 1 });
+    remoteAnsweredCurrent = true;
+    updateOnlineScoreDisplay();
+    setRemoteStatus(`${player2Name} answered ${data.correct ? '✅' : '❌'}`);
+    if (localAnsweredCurrent) scheduleAdvance();
+  }
+}
+
+function handleJoinerReceive(data) {
+  if (data.type === 'GAME_START') {
+    quizWords = data.words;
+    remotePlayerName = data.p1name;
+    player2Name = data.p1name;
+    scores = [0, 0];
+    answers = [];
+    currentQ = 0;
+    localAnsweredCurrent = false;
+    remoteAnsweredCurrent = false;
+    showScreen('screen-quiz');
+    loadQuestion();
+
+  } else if (data.type === 'PLAYER_ANSWERED') {
+    remoteAnsweredCurrent = true;
+    setRemoteStatus(`${remotePlayerName} answered ${data.correct ? '✅' : '❌'}`);
+
+  } else if (data.type === 'NEXT_QUESTION') {
+    scores = data.scores;
+    currentQ = data.nextIndex;
+    localAnsweredCurrent = false;
+    remoteAnsweredCurrent = false;
+    if (data.answers) answers = data.answers;
+    if (currentQ >= 10) {
+      showResults();
+    } else {
+      loadQuestion();
+    }
+  }
+}
+
+function startOnlineGame() {
+  quizWords = shuffle(WORDS).slice(0, 10);
+  currentQ = 0;
+  score = 0;
+  scores = [0, 0];
+  answers = [];
+  localAnsweredCurrent = false;
+  remoteAnsweredCurrent = false;
+  conn.send({ type: 'GAME_START', words: quizWords, p1name: playerName, p2name: player2Name });
+  showScreen('screen-quiz');
+  loadQuestion();
+}
+
+function scheduleAdvance() {
+  if (advanceTimeout) return;
+  advanceTimeout = setTimeout(() => {
+    advanceTimeout = null;
+    const nextIndex = currentQ + 1;
+    const payload = { type: 'NEXT_QUESTION', nextIndex, scores };
+    if (nextIndex >= 10) payload.answers = answers;
+    conn.send(payload);
+    currentQ = nextIndex;
+    localAnsweredCurrent = false;
+    remoteAnsweredCurrent = false;
+    clearRemoteStatus();
+    if (currentQ >= 10) {
+      showResults();
+    } else {
+      loadQuestion();
+    }
+  }, 2000);
+}
+
+function setRemoteStatus(msg) {
+  const el = document.getElementById('remote-status');
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
+}
+
+function clearRemoteStatus() {
+  const el = document.getElementById('remote-status');
+  if (el) el.style.display = 'none';
+}
+
+function updateOnlineScoreDisplay() {
+  const myScore = scores[onlineRole === 'host' ? 0 : 1];
+  const theirScore = scores[onlineRole === 'host' ? 1 : 0];
+  const theirName = onlineRole === 'host' ? player2Name : remotePlayerName;
+  document.getElementById('q-score').textContent = `${playerName}: ${myScore}  |  ${theirName}: ${theirScore}`;
+}
+
+function handleDisconnect() {
+  const active = document.querySelector('.screen.active');
+  if (active && active.id !== 'screen-home') {
+    alert('⚠️ Connection lost. The other player disconnected.');
+    cancelOnline();
+  }
+}
+
+function cancelOnline() {
+  if (advanceTimeout) { clearTimeout(advanceTimeout); advanceTimeout = null; }
+  if (peer) { peer.destroy(); peer = null; }
+  conn = null;
+  onlineRole = '';
+  goHome();
+}
+
+// ============================================================
 // INIT
 // ============================================================
 renderLeaderboard();
 </script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </body>
 </html>
