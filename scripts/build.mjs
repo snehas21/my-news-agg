@@ -46,6 +46,7 @@ const humanTime = (dateStr) => {
 const sourceSlug = (name) => name.toLowerCase().replace(/[^a-z0-9]/g, "-");
 
 const CATEGORY_RULES = [
+  { key: "india",    re: /\b(india|indian|modi|delhi|mumbai|bangalore|bengaluru|chennai|kolkata|hyderabad|bjp|congress party|lok sabha|rajya sabha|rupee|bse|nse|sensex|nifty|isro|iit|iim)\b/i },
   { key: "business", re: /\b(stocks?|market cap|economy|gdp|inflation|fed |federal reserve|central bank|interest rate|ipo|earnings|revenue|profit|crypto|bitcoin|ethereum|invest\w*|hedge fund|nasdaq|dow jones|s&p|financial|venture capital|acquisition|merger|layoffs?|recession|fiscal|treasury|bonds?|wall street)\b/i },
   { key: "science",  re: /\b(health|medical|drug|vaccine|cancer|disease|treatment|surgery|hospital|clinical|therapy|covid|pandemic|climate|global warming|space|nasa|spacex|research|scientists?|biology|physics|quantum|asteroid|planet|species|genome|crispr|evolution)\b/i },
   { key: "world",    re: /\b(war|conflict|ukraine|russia|china|israel|gaza|iran|nato|united nations|european union|election|president|prime minister|parliament|minister|treaty|diplomat\w*|military|troops|ceasefire|protest|sanctions)\b/i },
@@ -545,15 +546,14 @@ main { padding: 20px 16px 60px; }
           ${sourcesList}
         </div>
       </div>
-      <a href="portfolio.html" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#10b981;color:#fff;font-family:inherit;font-size:13px;font-weight:600;border:none;border-radius:8px;text-decoration:none;box-shadow:0 1px 4px rgba(16,185,129,.3);transition:background .15s" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">📈 Portfolio</a>
-      <button class="btn-add-source" id="open-add">+ Add Source</button>
     </div>
   </header>
 
   <main>
     <nav class="tabs" id="cat-tabs" aria-label="Filter by category">
       <button class="tab active" data-tab="all">All <span class="tab-count"></span></button>
-      <button class="tab" data-tab="tech">Tech1 <span class="tab-count"></span></button>
+      <button class="tab" data-tab="india">India <span class="tab-count"></span></button>
+      <button class="tab" data-tab="tech">Tech <span class="tab-count"></span></button>
       <button class="tab" data-tab="world">World <span class="tab-count"></span></button>
       <button class="tab" data-tab="business">Business <span class="tab-count"></span></button>
       <button class="tab" data-tab="science">Science &amp; Health <span class="tab-count"></span></button>
