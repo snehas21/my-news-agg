@@ -81,12 +81,6 @@ const itemToCard = (it, sourceName) => {
     </div>
     <h3><a href="${link}" target="_blank" rel="noopener">${title}</a></h3>
     ${desc ? `<p class="desc">${desc}</p>` : ""}
-    <div class="card-actions">
-      <button class="btn-save" onclick="saveArticle(this)" title="Save for offline reading">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Save offline
-      </button>
-    </div>
   </article>`;
 };
 
@@ -410,35 +404,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   footer a { color: var(--muted-light); text-decoration: none; }
   footer a:hover { color: var(--accent); }
 
-  /* ── Card actions (save button) ─────────────────── */
-  .card-actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: auto;
-    padding-top: 6px;
-    border-top: 1px solid var(--border);
-  }
-  .btn-save {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 5px 10px;
-    font-family: inherit;
-    font-size: 11.5px;
-    font-weight: 600;
-    color: var(--muted);
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: color .15s, border-color .15s, background .15s;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
-  .btn-save:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-glow); }
-  .btn-save:active { transform: scale(.96); }
-
-  /* ── Add-feed button (header) ────────────────────── */
+/* ── Add-feed button (header) ────────────────────── */
   .btn-add-feed {
     display: inline-flex;
     align-items: center;
@@ -695,60 +661,6 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     updateTabCounts();
   }
 
-  // ── Save article offline ───────────────────────────
-  window.saveArticle = function(btn) {
-    const card = btn.closest('.card');
-    const titleEl = card.querySelector('h3 a');
-    const title = titleEl.textContent.trim();
-    const link = titleEl.href;
-    const source = card.querySelector('.source-badge').textContent.trim();
-    const time = card.querySelector('.card-time').textContent.trim();
-    const descEl = card.querySelector('.desc');
-    const desc = descEl ? descEl.innerHTML : '';
-
-    const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const filename = title.slice(0, 80).replace(/[^a-z0-9\s]/gi, '').trim().replace(/\s+/g, '-') + '.html';
-
-    const html = \`<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>\${esc(title)}</title>
-<style>
-  body{font-family:system-ui,sans-serif;max-width:680px;margin:40px auto;padding:0 20px 60px;color:#1e293b;line-height:1.65;}
-  .meta{font-size:13px;color:#64748b;margin-bottom:20px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
-  .source{font-weight:700;background:#ede9fe;color:#6d28d9;padding:2px 8px;border-radius:4px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;}
-  h1{font-size:22px;font-weight:700;line-height:1.35;margin-bottom:16px;}
-  .excerpt{font-size:15px;color:#374151;line-height:1.7;}
-  .read-more{display:inline-block;margin-top:28px;padding:10px 20px;background:#6366f1;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;}
-  .read-more:hover{background:#4f46e5;}
-  .note{margin-top:36px;padding:12px 16px;background:#f1f5f9;border-radius:8px;font-size:12px;color:#64748b;}
-  @media(prefers-color-scheme:dark){body{background:#0f172a;color:#e2e8f0;} .excerpt{color:#94a3b8;} .note{background:#1e293b;color:#64748b;} h1{color:#f1f5f9;}}
-</style>
-</head>
-<body>
-  <div class="meta">
-    <span class="source">\${esc(source)}</span>
-    <span>\${esc(time)}</span>
-  </div>
-  <h1>\${esc(title)}</h1>
-  \${desc ? \`<div class="excerpt">\${desc}</div>\` : ''}
-  <a class="read-more" href="\${link}" target="_blank" rel="noopener">Read full article →</a>
-  <p class="note">Saved from My News on \${new Date().toLocaleDateString()}. The excerpt is from the RSS feed; the full article is at the original source.</p>
-</body>
-</html>\`;
-
-    const blob = new Blob([html], { type: 'text/html' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  };
-
   // ── Custom RSS feeds ───────────────────────────────
   const FEEDS_KEY = 'my-news-custom-feeds';
 
@@ -799,12 +711,6 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     </div>
     <h3><a href="\${link}" target="_blank" rel="noopener">\${title}</a></h3>
     \${desc ? \`<p class="desc">\${desc}</p>\` : ''}
-    <div class="card-actions">
-      <button class="btn-save" onclick="saveArticle(this)" title="Save for offline reading">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Save offline
-      </button>
-    </div>
   </article>\`;
   }
 
