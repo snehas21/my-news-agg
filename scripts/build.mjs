@@ -406,31 +406,9 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   footer a { color: var(--muted-light); text-decoration: none; }
   footer a:hover { color: var(--accent); }
 
-/* ── Add-feed button (header) ────────────────────── */
-  .btn-add-feed {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 6px 13px;
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--accent);
-    background: var(--accent-glow);
-    border: 1.5px solid rgba(99,102,241,0.3);
-    border-radius: 999px;
-    cursor: pointer;
-    transition: all .18s ease;
-    white-space: nowrap;
-    flex-shrink: 0;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
-  .btn-add-feed:hover { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 4px 12px rgba(99,102,241,0.35); }
-
   /* ── Feed modal ──────────────────────────────────── */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
-  .modal-overlay.open { display: flex; }
+  .modal-overlay { display: flex; position: fixed; inset: 0; background: rgba(15,23,42,0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
+  .modal-overlay[hidden] { display: none; }
   .modal {
     background: var(--card);
     border-radius: 18px;
@@ -445,12 +423,6 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     overflow-y: auto;
     border: 1px solid var(--border);
   }
-  .modal-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .modal-head h2 { font-size: 17px; font-weight: 700; color: var(--fg); }
   .modal-close {
     width: 30px; height: 30px;
     border: none;
@@ -463,70 +435,6 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     transition: background .15s, color .15s;
   }
   .modal-close:hover { color: var(--fg); }
-  .feed-form { display: flex; flex-direction: column; gap: 12px; }
-  .form-row { display: flex; flex-direction: column; gap: 5px; }
-  .form-row label { font-size: 11.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
-  .form-row input {
-    width: 100%;
-    padding: 9px 12px;
-    border: 1.5px solid var(--border);
-    border-radius: 10px;
-    font-family: inherit;
-    font-size: 14px;
-    color: var(--fg);
-    background: var(--bg);
-    outline: none;
-    transition: border-color .15s, box-shadow .15s;
-  }
-  .form-row input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
-  .form-row input::placeholder { color: var(--muted); }
-  .feed-error { font-size: 13px; color: #dc2626; background: rgba(220,38,38,.06); border: 1px solid rgba(220,38,38,.15); border-radius: 8px; padding: 8px 12px; }
-  .btn-submit {
-    padding: 9px 18px;
-    background: var(--accent);
-    color: #fff;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 600;
-    border: none;
-    border-radius: 9px;
-    cursor: pointer;
-    transition: background .15s, opacity .15s;
-    align-self: flex-end;
-  }
-  .btn-submit:hover { background: #4f46e5; }
-  .btn-submit:disabled { opacity: .6; cursor: not-allowed; }
-  .modal-divider { height: 1px; background: var(--border); }
-  .modal-section-label { font-size: 11.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
-  .feed-list { display: flex; flex-direction: column; gap: 8px; }
-  .no-feeds { font-size: 13px; color: var(--muted); text-align: center; padding: 8px 0; }
-  .feed-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-  }
-  .feed-item-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
-  .feed-item-name { font-size: 13px; font-weight: 600; color: var(--fg); }
-  .feed-item-url { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .btn-remove-feed {
-    flex-shrink: 0;
-    padding: 4px 10px;
-    background: rgba(220,38,38,.07);
-    color: #dc2626;
-    border: 1px solid rgba(220,38,38,.2);
-    border-radius: 6px;
-    font-family: inherit;
-    font-size: 11.5px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background .15s;
-  }
-  .btn-remove-feed:hover { background: rgba(220,38,38,.15); }
-
   /* ── Discover button ────────────────────────────── */
   .btn-discover {
     padding: 7px 16px;
@@ -685,10 +593,6 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
         <h1>My News</h1>
       </div>
       <div class="header-right">
-        <button class="btn-add-feed" id="btn-open-feed-modal">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add Feed
-        </button>
         <span class="updated-badge">
           <span class="updated-dot"></span>
           Updated ${updatedAt}
@@ -774,31 +678,6 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   </footer>
 
 
-<!-- Add-feed modal -->
-<div class="modal-overlay" id="feed-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="feed-modal-title">
-  <div class="modal">
-    <div class="modal-head">
-      <h2 id="feed-modal-title">Add RSS Feed</h2>
-      <button class="modal-close" id="feed-modal-close" aria-label="Close">✕</button>
-    </div>
-    <form class="feed-form" id="feed-form" novalidate>
-      <div class="form-row">
-        <label for="feed-name">Feed name</label>
-        <input id="feed-name" type="text" placeholder="e.g. Guardian World" required autocomplete="off"/>
-      </div>
-      <div class="form-row">
-        <label for="feed-url">RSS / Atom URL</label>
-        <input id="feed-url" type="url" placeholder="https://example.com/feed.xml" required autocomplete="off"/>
-      </div>
-      <p class="feed-error" id="feed-error" hidden></p>
-      <button type="submit" class="btn-submit">Add Feed</button>
-    </form>
-    <div class="modal-divider"></div>
-    <span class="modal-section-label">Saved custom feeds</span>
-    <div class="feed-list" id="feed-list"></div>
-  </div>
-</div>
-
 <script>
 (function () {
 
@@ -853,30 +732,16 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   let activeTab = 'all';
 
   function updateTabCounts() {
-    var tabs = document.querySelectorAll('[data-tab]');
-    var counts = {all:0};
-    allCards().forEach(function(c) {
     const tabs = document.querySelectorAll('[data-tab]');
     const counts = { all: 0 };
     allCards().forEach(c => {
-      if (c.style.display === 'none' && c.dataset.custom) return; // skip hidden custom cards not matching active tab
       counts.all++;
-      var cat = c.dataset.cat;
-      counts[cat] = (counts[cat] || 0) + 1;
-    });
-    tabs.forEach(function(tab) {
-      var n = counts[tab.dataset.tab] || 0;
-      tab.querySelector('.tab-count').textContent = n;
-    // Recount properly (ignore display for counting purposes)
-    const realCounts = { all: 0 };
-    allCards().forEach(c => {
-      realCounts.all++;
       const cat = c.dataset.cat;
-      realCounts[cat] = (realCounts[cat] || 0) + 1;
+      counts[cat] = (counts[cat] || 0) + 1;
     });
     tabs.forEach(tab => {
       const cat = tab.dataset.tab;
-      tab.querySelector('.tab-count').textContent = realCounts[cat] || 0;
+      tab.querySelector('.tab-count').textContent = counts[cat] || 0;
     });
   }
 
@@ -887,15 +752,6 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   }
 
   function initTabs() {
-    var tabs = document.querySelectorAll('[data-tab]');
-    var active = 'all';
-    tabs.forEach(function(tab) {
-      tab.addEventListener('click', function() {
-        active = tab.dataset.tab;
-        tabs.forEach(function(t) { t.classList.toggle('active', t.dataset.tab === active); });
-        allCards().forEach(function(c) {
-          c.style.display = (active === 'all' || c.dataset.cat === active) ? '' : 'none';
-        });
     const tabs = document.querySelectorAll('[data-tab]');
     tabs.forEach(tab => {
       tab.addEventListener('click', () => {
@@ -1117,164 +973,6 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   initCustomForm();
   loadCustomFeedsContent();
 
-  // ── Custom RSS feeds ───────────────────────────────
-  const FEEDS_KEY = 'my-news-custom-feeds';
-
-  function getSavedFeeds() {
-    try { return JSON.parse(localStorage.getItem(FEEDS_KEY) || '[]'); }
-    catch { return []; }
-  }
-  function setSavedFeeds(feeds) { localStorage.setItem(FEEDS_KEY, JSON.stringify(feeds)); }
-
-  function categorizeClient(text) {
-    const t = text.toLowerCase();
-    const rules = [
-      [/\\b(canada|canadian|ontario|quebec|toronto|vancouver|montreal|calgary|edmonton|ottawa|winnipeg|trudeau|rcmp|cbc)\\b/, 'canada'],
-      [/\\b(war|conflict|ukraine|russia|china|israel|gaza|iran|nato|united nations|election|president|prime minister|military|troops)\\b/, 'world'],
-      [/\\b(india|indian|modi|delhi|mumbai|bangalore|bengaluru|chennai|kolkata|hyderabad|bjp|rupee|isro)\\b/, 'india'],
-      [/\\b(stocks?|economy|gdp|inflation|interest rate|ipo|earnings|profit|crypto|bitcoin|nasdaq|financial|wall street)\\b/, 'business'],
-      [/\\b(health|medical|vaccine|cancer|disease|treatment|covid|climate|space|nasa|research|scientists?|biology|physics)\\b/, 'science'],
-      [/\\b(ai\\b|artificial intelligence|software|iphone|android|google|apple|microsoft|amazon|chip|startup|cybersecurity|openai|chatgpt)\\b/, 'tech'],
-    ];
-    for (const [re, key] of rules) if (re.test(t)) return key;
-    return 'other';
-  }
-
-  function parseRSS(xml) {
-    const doc = new DOMParser().parseFromString(xml, 'text/xml');
-    const nodes = [...doc.querySelectorAll('item, entry')].slice(0, 15);
-    return nodes.map(el => {
-      const g = tag => el.querySelector(tag)?.textContent?.trim() || '';
-      const link = el.querySelector('link')?.getAttribute('href') || g('link');
-      return { title: g('title'), link, desc: g('description') || g('summary'), pubDate: g('pubDate') || g('published') };
-    });
-  }
-
-  function makeCustomCard(item, sourceName) {
-    const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const title = esc(item.title || '(untitled)');
-    const link = item.link || '#';
-    const raw = (item.desc || '').replace(/<[^>]*>/g, '').slice(0, 280);
-    const desc = esc(raw);
-    const cat = categorizeClient(item.title + ' ' + raw);
-    const ts = item.pubDate ? new Date(item.pubDate).toLocaleDateString(undefined, {month:'short',day:'numeric'}) : '';
-    const slug = sourceName.toLowerCase().replace(/[^a-z0-9]/g, '-');
-    const hidden = (activeTab !== 'all' && cat !== activeTab) ? ' style="display:none"' : '';
-    return \`<article class="card" data-cat="\${cat}" data-custom="1"\${hidden}>
-    <div class="card-top">
-      <span class="source-badge src-\${slug} src-custom-feed">\${esc(sourceName)}</span>
-      <time class="card-time">\${ts}</time>
-    </div>
-    <h3><a href="\${link}" target="_blank" rel="noopener">\${title}</a></h3>
-    \${desc ? \`<p class="desc">\${desc}</p>\` : ''}
-  </article>\`;
-  }
-
-  async function fetchFeed(url) {
-    const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
-    const res = await fetch(proxy);
-    if (!res.ok) throw new Error('Network error (' + res.status + ')');
-    const { contents } = await res.json();
-    if (!contents) throw new Error('Empty response from proxy');
-    return parseRSS(contents);
-  }
-
-  async function renderCustomFeeds() {
-    const feeds = getSavedFeeds();
-    if (!feeds.length) return;
-    const grid = document.getElementById('main-grid');
-    await Promise.allSettled(feeds.map(async feed => {
-      try {
-        const items = await fetchFeed(feed.url);
-        const html = items.map(it => makeCustomCard(it, feed.name)).join('');
-        grid.insertAdjacentHTML('afterbegin', html);
-      } catch (e) {
-        console.warn('Custom feed failed:', feed.name, e.message);
-      }
-    }));
-    updateTabCounts();
-  }
-
-  // ── Feed modal ─────────────────────────────────────
-  function initFeedModal() {
-    const overlay  = document.getElementById('feed-modal-overlay');
-    const openBtn  = document.getElementById('btn-open-feed-modal');
-    const closeBtn = document.getElementById('feed-modal-close');
-    const form     = document.getElementById('feed-form');
-    const nameIn   = document.getElementById('feed-name');
-    const urlIn    = document.getElementById('feed-url');
-    const errorEl  = document.getElementById('feed-error');
-    const listEl   = document.getElementById('feed-list');
-    const submitBtn = form.querySelector('[type="submit"]');
-
-    const openModal  = () => { renderList(); overlay.classList.add('open'); nameIn.focus(); };
-    const closeModal = () => { overlay.classList.remove('open'); form.reset(); errorEl.hidden = true; };
-
-    openBtn.addEventListener('click', openModal);
-    closeBtn.addEventListener('click', closeModal);
-    overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.classList.contains('open')) closeModal(); });
-
-    function renderList() {
-      const feeds = getSavedFeeds();
-      listEl.innerHTML = feeds.length
-        ? feeds.map((f, i) => \`<div class="feed-item">
-            <div class="feed-item-info">
-              <span class="feed-item-name">\${f.name.replace(/</g,'&lt;')}</span>
-              <span class="feed-item-url">\${f.url.replace(/</g,'&lt;')}</span>
-            </div>
-            <button class="btn-remove-feed" data-idx="\${i}">Remove</button>
-          </div>\`).join('')
-        : '<p class="no-feeds">No custom feeds yet.</p>';
-    }
-
-    listEl.addEventListener('click', e => {
-      const btn = e.target.closest('.btn-remove-feed');
-      if (!btn) return;
-      const i = Number(btn.dataset.idx);
-      const feeds = getSavedFeeds();
-      const removed = feeds.splice(i, 1)[0];
-      setSavedFeeds(feeds);
-      // Remove cards from that source
-      document.querySelectorAll('.card[data-custom="1"]').forEach(c => {
-        if (c.querySelector('.source-badge')?.textContent.trim() === removed.name) c.remove();
-      });
-      updateTabCounts();
-      renderList();
-    });
-
-    form.addEventListener('submit', async e => {
-      e.preventDefault();
-      const name = nameIn.value.trim();
-      const url  = urlIn.value.trim();
-      if (!name || !url) return;
-      errorEl.hidden = true;
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Adding…';
-      try {
-        const items = await fetchFeed(url);
-        if (!items.length) throw new Error('No articles found in this feed.');
-        const feeds = getSavedFeeds();
-        feeds.push({ name, url });
-        setSavedFeeds(feeds);
-        const grid = document.getElementById('main-grid');
-        grid.insertAdjacentHTML('afterbegin', items.map(it => makeCustomCard(it, name)).join(''));
-        updateTabCounts();
-        form.reset();
-        renderList();
-      } catch (err) {
-        errorEl.textContent = 'Failed to load feed: ' + err.message;
-        errorEl.hidden = false;
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Add Feed';
-      }
-    });
-  }
-
-  initTabs();
-  initFeedModal();
-  renderCustomFeeds();
 })();
 </script>
 </body>
