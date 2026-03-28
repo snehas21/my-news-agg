@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pickleball Spot Poller</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-dark: #1b5e20;
+      --green: #2e7d32;
+      --green-mid: #388e3c;
+      --green-light: #c8e6c9;
+      --green-pale: #f1f8f1;
+      --red: #c62828;
+      --amber: #f57f17;
+      --blue: #1565c0;
+      --text: #212121;
+      --muted: #757575;
+      --border: #e0e0e0;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f4f6f8;
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, var(--green-dark) 0%, var(--green-mid) 100%);
+      color: #fff;
+      padding: 1.4rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+    }
+    header .icon { font-size: 2.2rem; }
+    header h1 { font-size: 1.6rem; font-weight: 700; }
+    header p  { font-size: 0.82rem; opacity: 0.85; margin-top: 2px; }
+
+    /* ── Layout ── */
+    .container { max-width: 860px; margin: 2rem auto; padding: 0 1rem; display: flex; flex-direction: column; gap: 1.25rem; }
+
+    /* ── Card ── */
+    .card {
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 1.4rem 1.6rem;
+    }
+    .card-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--green);
+      margin-bottom: 1.1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--green-light);
+    }
+
+    /* ── Config form ── */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.2rem; }
+    .field label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.35rem;
+    }
+    .field input[type="number"] {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-size: 1.05rem;
+      transition: border-color 0.2s;
+      appearance: textfield;
+    }
+    .field input[type="number"]:focus { outline: none; border-color: var(--green); }
+    .field .hint { font-size: 0.75rem; color: #9e9e9e; margin-top: 0.3rem; }
+
+    /* ── Buttons ── */
+    .btn-row { display: flex; gap: 0.8rem; }
+    .btn {
+      flex: 1;
+      padding: 0.75rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.18s, opacity 0.18s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+    }
+    .btn:active:not(:disabled) { transform: scale(0.97); }
+    .btn-start { background: var(--green); color: #fff; }
+    .btn-start:hover:not(:disabled) { background: var(--green-dark); }
+    .btn-stop  { background: var(--red); color: #fff; }
+    .btn-stop:hover:not(:disabled)  { background: #b71c1c; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Status grid ── */
+    .status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .stat-box { background: var(--green-pale); border-radius: 10px; padding: 1rem; text-align: center; }
+    .stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.45rem; }
+    .stat-value { font-size: 1.25rem; font-weight: 700; color: var(--text); min-height: 1.8rem; }
+
+    /* ── State badge ── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+    .badge-idle      { background: #eeeeee; color: #616161; }
+    .badge-polling   { background: #e8f5e9; color: #2e7d32; }
+    .badge-waiting   { background: #fff8e1; color: #f57f17; }
+    .badge-stopped   { background: #ffebee; color: #c62828; }
+    .badge-completed { background: #e3f2fd; color: #1565c0; }
+
+    /* Pulsing dot for active polling */
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: currentColor;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.45;transform:scale(1.3)} }
+
+    /* Countdown timer */
+    .countdown { font-family: 'Courier New', monospace; font-size: 1.3rem; font-weight: 700; color: var(--amber); }
+
+    /* ── Spots alert ── */
+    .spots-alert {
+      display: none;
+      background: #e8f5e9;
+      border: 2px solid var(--green);
+      border-radius: var(--radius);
+      padding: 1.4rem 1.6rem;
+      animation: slideIn 0.4s ease;
+    }
+    .spots-alert.show { display: block; }
+    @keyframes slideIn { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+    .spots-alert-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; }
+    .spots-alert-header h2 { color: var(--green-dark); font-size: 1.15rem; }
+    .spot-card {
+      background: #fff;
+      border-left: 4px solid var(--green);
+      border-radius: 8px;
+      padding: 0.8rem 1rem;
+      margin-bottom: 0.6rem;
+      font-size: 0.9rem;
+    }
+    .spot-card strong { display: block; margin-bottom: 0.2rem; }
+    .spot-card .raw { font-size: 0.77rem; color: var(--muted); white-space: pre-wrap; }
+    .book-btn {
+      display: inline-block;
+      margin-top: 1rem;
+      background: var(--green);
+      color: #fff;
+      text-decoration: none;
+      padding: 0.65rem 1.4rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      transition: background 0.18s;
+    }
+    .book-btn:hover { background: var(--green-dark); }
+
+    /* ── Activity log ── */
+    .log-box {
+      background: #1e1e2e;
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      height: 280px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      line-height: 1.55;
+    }
+    .log-box::-webkit-scrollbar { width: 6px; }
+    .log-box::-webkit-scrollbar-thumb { background: #44475a; border-radius: 4px; }
+    .log-entry { display: flex; gap: 0.5rem; padding: 0.1rem 0; }
+    .log-time  { color: #6272a4; flex-shrink: 0; }
+    .log-info    { color: #8be9fd; }
+    .log-success { color: #50fa7b; }
+    .log-warn    { color: #f1fa8c; }
+    .log-error   { color: #ff5555; }
+
+    /* Search params info bar */
+    .info-bar {
+      background: var(--green-light);
+      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      font-size: 0.8rem;
+      color: var(--green-dark);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      margin-bottom: 0.8rem;
+    }
+    .info-bar span::before { content: '• '; }
+
+    @media (max-width: 560px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .status-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="icon">🏓</div>
+  <div>
+    <h1>Pickleball Spot Poller</h1>
+    <p>Richmond Hill Active Communities — auto-checks for open court slots</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Config card -->
+  <div class="card">
+    <div class="card-title">Poll Configuration</div>
+
+    <div class="info-bar">
+      <span>Site: Richmond Hill Active Communities</span>
+      <span>Activity: Pickleball</span>
+      <span>Age group: 40–50 yrs</span>
+      <span>Min spots: 1</span>
+    </div>
+
+    <div class="form-grid">
+      <div class="field">
+        <label for="pollCount">Number of polls</label>
+        <input type="number" id="pollCount" value="10" min="1" max="200" />
+        <div class="hint">Total times to check for availability</div>
+      </div>
+      <div class="field">
+        <label for="pollInterval">Interval between polls (minutes)</label>
+        <input type="number" id="pollInterval" value="30" min="1" max="240" />
+        <div class="hint">How long to wait between each check</div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-start" id="startBtn" onclick="startPolling()">
+        ▶ Start Polling
+      </button>
+      <button class="btn btn-stop" id="stopBtn" onclick="stopPolling()" disabled>
+        ■ Stop
+      </button>
+    </div>
+  </div>
+
+  <!-- Status card -->
+  <div class="card">
+    <div class="card-title">Status</div>
+    <div class="status-grid">
+      <div class="stat-box">
+        <div class="stat-label">State</div>
+        <div class="stat-value" id="stateBadge">
+          <span class="badge badge-idle">Idle</span>
+        </div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Progress</div>
+        <div class="stat-value" id="progress">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Next poll in</div>
+        <div class="stat-value countdown" id="countdown">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Spots found alert -->
+  <div class="spots-alert" id="spotsAlert">
+    <div class="spots-alert-header">
+      <span style="font-size:1.6rem">🎉</span>
+      <h2>Pickleball Spots Available!</h2>
+    </div>
+    <div id="spotsList"></div>
+    <a id="bookLink" href="https://ca.apm.activecommunities.com/richmondhill/Activity_Search"
+       target="_blank" rel="noopener" class="book-btn">
+      Book Now →
+    </a>
+  </div>
+
+  <!-- Activity log card -->
+  <div class="card">
+    <div class="card-title">Activity Log</div>
+    <div class="log-box" id="logBox">
+      <div class="log-entry">
+        <span class="log-time">[ready]</span>
+        <span class="log-info">Poller ready. Set your configuration above and press Start Polling.</span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+  /* ── State ─────────────────────────────────────────────────────────────── */
+  let es = null;
+  let countdownInterval = null;
+  let nextPollAt = null;
+
+  /* ── API calls ──────────────────────────────────────────────────────────── */
+  async function startPolling() {
+    const pollCount    = parseInt(document.getElementById('pollCount').value);
+    const intervalMins = parseInt(document.getElementById('pollInterval').value);
+
+    if (!pollCount || pollCount < 1) { alert('Please enter a valid poll count (≥ 1).'); return; }
+    if (!intervalMins || intervalMins < 1) { alert('Please enter a valid interval (≥ 1 minute).'); return; }
+
+    clearSpots();
+    log('info', `Starting poller: ${pollCount} poll(s) every ${intervalMins} min.`);
+
+    const res = await fetch('/api/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pollCount, intervalMinutes: intervalMins }),
+    });
+    const data = await res.json();
+    if (data.error) { log('error', data.error); return; }
+
+    setButtons(true);
+    connectSSE();
+  }
+
+  async function stopPolling() {
+    await fetch('/api/stop', { method: 'POST' });
+  }
+
+  /* ── SSE ─────────────────────────────────────────────────────────────── */
+  function connectSSE() {
+    if (es) es.close();
+    es = new EventSource('/api/events');
+    es.onmessage = (e) => handleEvent(JSON.parse(e.data));
+    es.onerror   = ()  => log('warn', 'Lost connection to server. Reconnecting...');
+  }
+
+  function handleEvent(ev) {
+    switch (ev.type) {
+      case 'status':
+        // Sync UI when (re)connecting mid-session
+        if (ev.active) {
+          setButtons(true);
+          setBadge('polling');
+          setProgress(ev.pollCount, ev.maxPolls);
+          if (ev.nextPollAt) startCountdown(ev.nextPollAt);
+        }
+        if (ev.spotsFound && ev.spotsFound.length) showSpots(ev.spotsFound, null);
+        break;
+
+      case 'poll_start':
+        stopCountdown();
+        setBadge('polling');
+        setProgress(ev.pollCount, ev.maxPolls);
+        log('info', `Poll ${ev.pollCount} of ${ev.maxPolls} — checking site...`);
+        break;
+
+      case 'poll_result':
+        if (ev.result.available) {
+          log('success', `Poll ${ev.pollCount}: SPOTS FOUND! (${ev.result.spots.length} available)`);
+        } else {
+          log('info', `Poll ${ev.pollCount}: No spots available at ${fmtTime(ev.result.timestamp)}.`);
+        }
+        break;
+
+      case 'spots_found':
+        showSpots(ev.spots, ev.searchUrl);
+        break;
+
+      case 'waiting':
+        setBadge('waiting');
+        nextPollAt = ev.nextPollAt;
+        startCountdown(ev.nextPollAt);
+        log('warn', `Waiting ${ev.intervalMinutes} min before next poll...`);
+        break;
+
+      case 'error':
+        log('error', `Poll ${ev.pollCount} error: ${ev.message}`);
+        break;
+
+      case 'stopped':
+        finishPolling('stopped', `Polling stopped after ${ev.pollCount} poll(s).`);
+        break;
+
+      case 'completed':
+        finishPolling('completed', `Polling complete — checked ${ev.pollCount} time(s).`);
+        break;
+    }
+  }
+
+  /* ── UI helpers ──────────────────────────────────────────────────────── */
+  const BADGES = {
+    idle:      `<span class="badge badge-idle">Idle</span>`,
+    polling:   `<span class="badge badge-polling"><span class="dot"></span>Checking...</span>`,
+    waiting:   `<span class="badge badge-waiting">Waiting</span>`,
+    stopped:   `<span class="badge badge-stopped">Stopped</span>`,
+    completed: `<span class="badge badge-completed">Completed</span>`,
+  };
+
+  function setBadge(state) {
+    document.getElementById('stateBadge').innerHTML = BADGES[state] || BADGES.idle;
+  }
+
+  function setProgress(n, max) {
+    document.getElementById('progress').textContent = max ? `${n} / ${max}` : '—';
+  }
+
+  function setButtons(active) {
+    document.getElementById('startBtn').disabled = active;
+    document.getElementById('stopBtn').disabled  = !active;
+  }
+
+  function finishPolling(state, msg) {
+    setBadge(state);
+    setButtons(false);
+    stopCountdown();
+    log(state === 'completed' ? 'success' : 'warn', msg);
+  }
+
+  /* ── Countdown ──────────────────────────────────────────────────────── */
+  function startCountdown(targetEpochMs) {
+    stopCountdown();
+    tick();
+    countdownInterval = setInterval(tick, 1000);
+
+    function tick() {
+      const secs = Math.max(0, Math.round((targetEpochMs - Date.now()) / 1000));
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      document.getElementById('countdown').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+      if (secs === 0) stopCountdown();
+    }
+  }
+
+  function stopCountdown() {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+    document.getElementById('countdown').textContent = '—';
+  }
+
+  /* ── Spots alert ──────────────────────────────────────────────────────── */
+  function showSpots(spots, searchUrl) {
+    const list = document.getElementById('spotsList');
+    list.innerHTML = '';
+
+    spots.forEach((s) => {
+      const div = document.createElement('div');
+      div.className = 'spot-card';
+      div.innerHTML = `<strong>${esc(s.name || 'Available spot')}</strong>`;
+      if (s.raw && s.raw !== s.name) {
+        const pre = document.createElement('div');
+        pre.className = 'raw';
+        pre.textContent = s.raw.substring(0, 180);
+        div.appendChild(pre);
+      }
+      list.appendChild(div);
+    });
+
+    if (searchUrl) {
+      document.getElementById('bookLink').href = searchUrl;
+    }
+
+    document.getElementById('spotsAlert').classList.add('show');
+    document.getElementById('spotsAlert').scrollIntoView({ behavior: 'smooth' });
+
+    // Beep alert
+    playBeep();
+  }
+
+  function clearSpots() {
+    document.getElementById('spotsAlert').classList.remove('show');
+    document.getElementById('spotsList').innerHTML = '';
+  }
+
+  /* ── Log ──────────────────────────────────────────────────────────────── */
+  function log(type, msg) {
+    const box   = document.getElementById('logBox');
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    entry.innerHTML = `<span class="log-time">[${now()}]</span><span class="log-${type}">${esc(msg)}</span>`;
+    box.appendChild(entry);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  /* ── Audio alert ──────────────────────────────────────────────────────── */
+  function playBeep() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [880, 1100, 880].forEach((freq, i) => {
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = freq;
+        const t = ctx.currentTime + i * 0.22;
+        gain.gain.setValueAtTime(0.4, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+        osc.start(t); osc.stop(t + 0.2);
+      });
+    } catch (_) {}
+  }
+
+  /* ── Utils ──────────────────────────────────────────────────────────── */
+  function esc(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function now() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+
+  function fmtTime(iso) {
+    if (!iso) return '';
+    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  /* ── Connect on load (handles page refresh mid-session) ─────────────── */
+  connectSSE();
+</script>
+</body>
+</html>
