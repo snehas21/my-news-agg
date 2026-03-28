@@ -393,6 +393,8 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     overflow: hidden;
   }
 
+  .custom-loading {
+    grid-column: 1/-1;
   /* ── Footer ──────────────────────────────────────── */
   footer {
     border-top: 1px solid var(--border);
@@ -525,6 +527,135 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   }
   .btn-remove-feed:hover { background: rgba(220,38,38,.15); }
 
+  /* ── Discover button ────────────────────────────── */
+  .btn-discover {
+    padding: 7px 16px;
+    background: var(--accent);
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .btn-discover:hover { background: #4f46e5; }
+
+  /* ── Modal tabs ─────────────────────────────────── */
+  .modal-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    margin: -8px 0 0;
+  }
+  .modal-tab-btn {
+    flex: 1;
+    padding: 10px 6px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color .15s, border-color .15s;
+  }
+  .modal-tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .modal-tab-panel[hidden] { display: none; }
+  .modal-tab-panel { padding-top: 16px; display: flex; flex-direction: column; gap: 14px; }
+
+  /* ── Category filter chips ──────────────────────── */
+  .cat-filter-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cat-filter-btn {
+    padding: 4px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted-light);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color .15s, color .15s, background .15s;
+  }
+  .cat-filter-btn:hover { border-color: var(--accent); color: var(--fg); }
+  .cat-filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* ── Suggested feed items ───────────────────────── */
+  .suggest-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+  .suggest-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .suggest-info { display: flex; flex-direction: column; gap: 3px; flex: 1; overflow: hidden; }
+  .suggest-name { font-size: 13px; font-weight: 600; color: var(--fg); }
+  .suggest-desc { font-size: 11px; color: var(--muted); }
+  .cat-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-top: 2px;
+    width: fit-content;
+  }
+  .cat-world    { background:rgba(37,99,235,.08);   color:#2563eb; border:1px solid rgba(37,99,235,.2); }
+  .cat-tech     { background:rgba(124,58,237,.08);  color:#7c3aed; border:1px solid rgba(124,58,237,.2); }
+  .cat-science  { background:rgba(5,150,105,.08);   color:#059669; border:1px solid rgba(5,150,105,.2); }
+  .cat-business { background:rgba(234,88,12,.08);   color:#ea580c; border:1px solid rgba(234,88,12,.2); }
+  .cat-india    { background:rgba(220,38,38,.08);   color:#dc2626; border:1px solid rgba(220,38,38,.2); }
+  .cat-other    { background:rgba(100,116,139,.08); color:#64748b; border:1px solid rgba(100,116,139,.2); }
+  .btn-add-feed {
+    flex-shrink: 0;
+    padding: 5px 12px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+    white-space: nowrap;
+  }
+  .btn-add-feed:hover { background: #4f46e5; }
+  .btn-add-feed.btn-added {
+    background: rgba(5,150,105,.1);
+    color: #059669;
+    border: 1px solid rgba(5,150,105,.2);
+    cursor: default;
+  }
+
+  /* ── Custom feeds section ───────────────────────── */
+  #custom-section { margin-top: 48px; }
+  #custom-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+
+  /* ── Footer ──────────────────────────────────────── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
   /* ── Responsive – tablet ─────────────────────────── */
   @media (max-width: 1024px) {
     .grid { grid-template-columns: repeat(2, 1fr); }
@@ -565,6 +696,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
         <div class="sources">
           ${sourcesList}
         </div>
+        <button class="btn-discover" id="open-feeds-modal">+ Discover Feeds</button>
       </div>
     </div>
   </header>
@@ -582,7 +714,60 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     </nav>
     <section class="grid" id="main-grid">${cardsHTML}</section>
 
+    <section id="custom-section" hidden>
+      <div class="section-header" style="margin-top:48px">
+        <span class="section-label">Custom Feeds</span>
+        <div class="section-divider"></div>
+      </div>
+      <div id="custom-pills"></div>
+      <section class="grid" id="custom-grid"></section>
+    </section>
   </main>
+
+  <div class="modal-overlay" id="feeds-modal" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h2>RSS Feed Sources</h2>
+        <button class="modal-close" aria-label="Close">&#215;</button>
+      </div>
+      <div class="modal-tabs">
+        <button class="modal-tab-btn active" data-panel="suggested">Suggested</button>
+        <button class="modal-tab-btn" data-panel="custom">Add by URL</button>
+        <button class="modal-tab-btn" data-panel="manage">Your Feeds</button>
+      </div>
+      <div class="modal-tab-panel" id="panel-suggested">
+        <div class="cat-filter-btns">
+          <button class="cat-filter-btn active" data-cat="all">All</button>
+          <button class="cat-filter-btn" data-cat="world">World</button>
+          <button class="cat-filter-btn" data-cat="tech">Tech</button>
+          <button class="cat-filter-btn" data-cat="science">Science</button>
+          <button class="cat-filter-btn" data-cat="business">Business</button>
+          <button class="cat-filter-btn" data-cat="india">India</button>
+          <button class="cat-filter-btn" data-cat="other">Sports &amp; More</button>
+        </div>
+        <div class="suggest-list" id="suggested-feeds-list"></div>
+      </div>
+      <div class="modal-tab-panel" id="panel-custom" hidden>
+        <form class="add-form" id="custom-feed-form">
+          <div class="form-field">
+            <label for="cf-name">Feed Name</label>
+            <input id="cf-name" type="text" placeholder="e.g. My Favourite Blog" autocomplete="off"/>
+          </div>
+          <div class="form-field">
+            <label for="cf-url">RSS / Atom URL</label>
+            <input id="cf-url" type="url" placeholder="https://example.com/feed.xml" autocomplete="off"/>
+          </div>
+          <div class="form-error" id="cf-error" hidden></div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Add Feed</button>
+          </div>
+        </form>
+      </div>
+      <div class="modal-tab-panel" id="panel-manage" hidden>
+        <div class="sources-list" id="custom-feeds-list"></div>
+      </div>
+    </div>
+  </div>
 
   <footer>
     Built with <a href="https://pages.github.com" target="_blank" rel="noopener">GitHub Pages</a> &amp; GitHub Actions &nbsp;·&nbsp; No cookies &nbsp;·&nbsp; Links go to original publishers.
@@ -616,20 +801,72 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
 
 <script>
 (function () {
+
+  // ── Suggested feeds catalogue ──────────────────────
+  var SUGGESTED = [
+    {name:"Reuters Top News",      url:"https://feeds.reuters.com/reuters/topNews",                          cat:"world",    desc:"Top global stories from Reuters"},
+    {name:"NPR News",              url:"https://feeds.npr.org/1001/rss.xml",                                 cat:"world",    desc:"National Public Radio – top headlines"},
+    {name:"The Guardian World",    url:"https://www.theguardian.com/world/rss",                              cat:"world",    desc:"International news from The Guardian"},
+    {name:"Al Jazeera English",    url:"https://www.aljazeera.com/xml/rss/all.xml",                          cat:"world",    desc:"Global news from Al Jazeera"},
+    {name:"Associated Press",      url:"https://rsshub.app/apnews/topics/apf-topnews",                       cat:"world",    desc:"Breaking news from the AP wire"},
+    {name:"MIT Technology Review", url:"https://www.technologyreview.com/feed/",                             cat:"tech",     desc:"Deep-dive tech journalism from MIT"},
+    {name:"Wired",                 url:"https://www.wired.com/feed/rss",                                     cat:"tech",     desc:"Tech, science and culture from Wired"},
+    {name:"The Register",          url:"https://www.theregister.com/headlines.atom",                         cat:"tech",     desc:"Enterprise and IT news"},
+    {name:"Slashdot",              url:"https://rss.slashdot.org/Slashdot/slashdotMain",                     cat:"tech",     desc:"Tech news for nerds, stuff that matters"},
+    {name:"9to5Mac",               url:"https://9to5mac.com/feed/",                                          cat:"tech",     desc:"Apple news and rumours"},
+    {name:"Android Authority",     url:"https://www.androidauthority.com/feed/",                             cat:"tech",     desc:"Android news, reviews and guides"},
+    {name:"NASA Breaking News",    url:"https://www.nasa.gov/news-release/feed/",                            cat:"science",  desc:"Latest news releases from NASA"},
+    {name:"Science Daily",         url:"https://www.sciencedaily.com/rss/top/science.xml",                   cat:"science",  desc:"Latest research news across all sciences"},
+    {name:"New Scientist",         url:"https://www.newscientist.com/feed/home/",                            cat:"science",  desc:"Science and technology news"},
+    {name:"Scientific American",   url:"https://www.scientificamerican.com/platform/feeds/news.xml",         cat:"science",  desc:"In-depth science news and analysis"},
+    {name:"MarketWatch Top Stories",url:"https://feeds.marketwatch.com/marketwatch/topstories/",             cat:"business", desc:"Financial news from MarketWatch"},
+    {name:"Seeking Alpha",         url:"https://seekingalpha.com/market_currents.xml",                       cat:"business", desc:"Stock market news and analysis"},
+    {name:"NDTV Top Stories",      url:"https://feeds.feedburner.com/ndtvnews-top-stories",                  cat:"india",    desc:"Top stories from NDTV India"},
+    {name:"Times of India",        url:"https://timesofindia.indiatimes.com/rssfeedstopstories.cms",         cat:"india",    desc:"India's most-read English newspaper"},
+    {name:"The Hindu",             url:"https://www.thehindu.com/feeder/default.rss",                        cat:"india",    desc:"Quality journalism from The Hindu"},
+    {name:"BBC Sport",             url:"https://feeds.bbci.co.uk/sport/rss.xml",                             cat:"other",    desc:"Sports coverage from BBC"},
+    {name:"ESPN Headlines",        url:"https://www.espn.com/espn/rss/news",                                 cat:"other",    desc:"Sports news from ESPN"},
+    {name:"Lifehacker",            url:"https://lifehacker.com/feed/rss",                                    cat:"other",    desc:"Life hacks and productivity tips"},
+    {name:"OpenCulture",           url:"https://www.openculture.com/feed",                                   cat:"other",    desc:"Free cultural & educational media"}
+  ];
+
+  // ── LocalStorage helpers ───────────────────────────
+  var LS_KEY = 'myNewsCustomFeeds';
+  function getCustomFeeds() {
+    try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch(e) { return []; }
+  }
+  function setCustomFeeds(feeds) { localStorage.setItem(LS_KEY, JSON.stringify(feeds)); }
+  function addCustomFeed(feed) {
+    var feeds = getCustomFeeds();
+    if (feeds.find(function(f) { return f.url === feed.url; })) return false;
+    feeds.push(feed);
+    setCustomFeeds(feeds);
+    return true;
+  }
+  function removeCustomFeed(url) {
+    setCustomFeeds(getCustomFeeds().filter(function(f) { return f.url !== url; }));
+  }
+
   // ── Tab filtering ──────────────────────────────────
-  function allCards() { return document.querySelectorAll('.card[data-cat]'); }
+  function allCards() { return document.querySelectorAll('#main-grid .card[data-cat], #custom-grid .card[data-cat]'); }
 
   let activeTab = 'all';
 
   function updateTabCounts() {
+    var tabs = document.querySelectorAll('[data-tab]');
+    var counts = {all:0};
+    allCards().forEach(function(c) {
     const tabs = document.querySelectorAll('[data-tab]');
     const counts = { all: 0 };
     allCards().forEach(c => {
       if (c.style.display === 'none' && c.dataset.custom) return; // skip hidden custom cards not matching active tab
       counts.all++;
-      const cat = c.dataset.cat;
+      var cat = c.dataset.cat;
       counts[cat] = (counts[cat] || 0) + 1;
     });
+    tabs.forEach(function(tab) {
+      var n = counts[tab.dataset.tab] || 0;
+      tab.querySelector('.tab-count').textContent = n;
     // Recount properly (ignore display for counting purposes)
     const realCounts = { all: 0 };
     allCards().forEach(c => {
@@ -650,6 +887,15 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   }
 
   function initTabs() {
+    var tabs = document.querySelectorAll('[data-tab]');
+    var active = 'all';
+    tabs.forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        active = tab.dataset.tab;
+        tabs.forEach(function(t) { t.classList.toggle('active', t.dataset.tab === active); });
+        allCards().forEach(function(c) {
+          c.style.display = (active === 'all' || c.dataset.cat === active) ? '' : 'none';
+        });
     const tabs = document.querySelectorAll('[data-tab]');
     tabs.forEach(tab => {
       tab.addEventListener('click', () => {
@@ -660,6 +906,216 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     });
     updateTabCounts();
   }
+
+  // ── Suggested feeds render ─────────────────────────
+  function activeCatFilter() {
+    var btn = document.querySelector('.cat-filter-btn.active');
+    return btn ? btn.dataset.cat : 'all';
+  }
+
+  function renderSuggestedFeeds(filterCat) {
+    var container = document.getElementById('suggested-feeds-list');
+    var customUrls = getCustomFeeds().map(function(f) { return f.url; });
+    var feeds = filterCat === 'all' ? SUGGESTED : SUGGESTED.filter(function(f) { return f.cat === filterCat; });
+    if (!feeds.length) { container.innerHTML = '<p class="no-sources">No feeds in this category.</p>'; return; }
+    container.innerHTML = feeds.map(function(feed) {
+      var added = customUrls.indexOf(feed.url) !== -1;
+      return '<div class="suggest-item">' +
+        '<div class="suggest-info">' +
+          '<span class="suggest-name">' + feed.name + '</span>' +
+          '<span class="suggest-desc">' + feed.desc + '</span>' +
+          '<span class="cat-badge cat-' + feed.cat + '">' + feed.cat + '</span>' +
+        '</div>' +
+        '<button class="btn-add-feed' + (added ? ' btn-added' : '') + '"' +
+          ' data-url="' + feed.url + '" data-name="' + feed.name + '" data-cat="' + feed.cat + '">' +
+          (added ? 'Added' : '+ Add') +
+        '</button>' +
+      '</div>';
+    }).join('');
+    container.querySelectorAll('.btn-add-feed:not(.btn-added)').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        addCustomFeed({name: btn.dataset.name, url: btn.dataset.url, cat: btn.dataset.cat});
+        renderSuggestedFeeds(activeCatFilter());
+        renderCustomFeedsList();
+        loadCustomFeedsContent();
+      });
+    });
+  }
+
+  // ── Custom feeds list in modal ─────────────────────
+  function renderCustomFeedsList() {
+    var list = document.getElementById('custom-feeds-list');
+    var feeds = getCustomFeeds();
+    if (!feeds.length) {
+      list.innerHTML = '<p class="no-sources">No custom feeds added yet. Browse the Suggested tab to add some!</p>';
+      return;
+    }
+    list.innerHTML = feeds.map(function(feed) {
+      return '<div class="src-item">' +
+        '<div class="src-item-info">' +
+          '<span class="src-item-name">' + feed.name + '</span>' +
+          '<span class="src-item-url">' + feed.url + '</span>' +
+        '</div>' +
+        '<button class="btn-remove" data-url="' + feed.url + '">Remove</button>' +
+      '</div>';
+    }).join('');
+    list.querySelectorAll('.btn-remove').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        removeCustomFeed(btn.dataset.url);
+        renderCustomFeedsList();
+        renderSuggestedFeeds(activeCatFilter());
+        loadCustomFeedsContent();
+      });
+    });
+  }
+
+  // ── Client-side RSS fetching ───────────────────────
+  var PROXY = 'https://api.allorigins.win/raw?url=';
+
+  function parseRSSXML(xml) {
+    var doc = (new DOMParser()).parseFromString(xml, 'application/xml');
+    return Array.from(doc.querySelectorAll('item, entry')).slice(0, 10).map(function(item) {
+      var title = (item.querySelector('title') || {}).textContent || '';
+      var linkEl = item.querySelector('link');
+      var link = (linkEl && (linkEl.getAttribute('href') || linkEl.textContent)) || '#';
+      var desc = (item.querySelector('description, summary') || {}).textContent || '';
+      var pubDate = (item.querySelector('pubDate, published, updated') || {}).textContent || '';
+      return {title: title.trim(), link: link.trim(), desc: desc.trim(), pubDate: pubDate.trim()};
+    });
+  }
+
+  function timeAgo(dateStr) {
+    if (!dateStr) return '';
+    var d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    var s = (Date.now() - d.getTime()) / 1000;
+    if (s < 60) return 'just now';
+    if (s < 3600) return Math.floor(s/60) + 'm ago';
+    if (s < 86400) return Math.floor(s/3600) + 'h ago';
+    return Math.floor(s/86400) + 'd ago';
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function loadCustomFeedsContent() {
+    var feeds = getCustomFeeds();
+    var section = document.getElementById('custom-section');
+    var grid = document.getElementById('custom-grid');
+    var pills = document.getElementById('custom-pills');
+    if (!feeds.length) { section.hidden = true; return; }
+    section.hidden = false;
+    pills.innerHTML = feeds.map(function(f) { return '<span class="pill">' + escapeHtml(f.name) + '</span>'; }).join('');
+    grid.innerHTML = '<p class="custom-loading">Loading custom feeds\u2026</p>';
+    var allArticles = [];
+    var pending = feeds.length;
+    feeds.forEach(function(feed) {
+      fetch(PROXY + encodeURIComponent(feed.url))
+        .then(function(r) { return r.text(); })
+        .then(function(xml) {
+          parseRSSXML(xml).forEach(function(item) {
+            allArticles.push({
+              date: new Date(item.pubDate || 0),
+              html: '<article class="card" data-cat="' + escapeHtml(feed.cat || 'other') + '">' +
+                '<div class="card-top">' +
+                  '<span class="source-badge src-custom-feed">' + escapeHtml(feed.name) + '</span>' +
+                  '<time class="card-time">' + timeAgo(item.pubDate) + '</time>' +
+                '</div>' +
+                '<h3><a href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener">' + escapeHtml(item.title) + '</a></h3>' +
+                (item.desc ? '<p class="desc">' + escapeHtml(item.desc.substring(0, 200)) + '</p>' : '') +
+              '</article>'
+            });
+          });
+        })
+        .catch(function() {})
+        .then(function() {
+          pending--;
+          if (pending === 0) {
+            allArticles.sort(function(a,b) { return b.date - a.date; });
+            grid.innerHTML = allArticles.length
+              ? allArticles.map(function(a) { return a.html; }).join('')
+              : '<p class="custom-loading">Could not load feeds. They may not support CORS.</p>';
+            updateTabCounts();
+          }
+        });
+    });
+  }
+
+  // ── Modal ──────────────────────────────────────────
+  function initModal() {
+    var overlay = document.getElementById('feeds-modal');
+    var openBtn = document.getElementById('open-feeds-modal');
+    var closeBtn = overlay.querySelector('.modal-close');
+    var tabBtns = overlay.querySelectorAll('.modal-tab-btn');
+    var panels = {
+      suggested: document.getElementById('panel-suggested'),
+      custom:    document.getElementById('panel-custom'),
+      manage:    document.getElementById('panel-manage')
+    };
+
+    function showPanel(name) {
+      tabBtns.forEach(function(b) { b.classList.toggle('active', b.dataset.panel === name); });
+      Object.keys(panels).forEach(function(k) { panels[k].hidden = k !== name; });
+    }
+
+    tabBtns.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        showPanel(btn.dataset.panel);
+        if (btn.dataset.panel === 'suggested') renderSuggestedFeeds(activeCatFilter());
+        if (btn.dataset.panel === 'manage') renderCustomFeedsList();
+      });
+    });
+
+    openBtn.addEventListener('click', function() {
+      overlay.hidden = false;
+      showPanel('suggested');
+      renderSuggestedFeeds('all');
+    });
+    closeBtn.addEventListener('click', function() { overlay.hidden = true; });
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.hidden = true; });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') overlay.hidden = true; });
+  }
+
+  // ── Category filter in modal ───────────────────────
+  function initCategoryFilter() {
+    document.querySelectorAll('.cat-filter-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.cat-filter-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        renderSuggestedFeeds(btn.dataset.cat);
+      });
+    });
+  }
+
+  // ── Custom URL form ────────────────────────────────
+  function initCustomForm() {
+    var form    = document.getElementById('custom-feed-form');
+    var nameEl  = document.getElementById('cf-name');
+    var urlEl   = document.getElementById('cf-url');
+    var errEl   = document.getElementById('cf-error');
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      var name = nameEl.value.trim();
+      var url  = urlEl.value.trim();
+      errEl.hidden = true;
+      if (!name || !url) { errEl.textContent = 'Please fill in both fields.'; errEl.hidden = false; return; }
+      try { new URL(url); } catch(ex) { errEl.textContent = 'Please enter a valid URL.'; errEl.hidden = false; return; }
+      if (!addCustomFeed({name:name, url:url, cat:'other'})) {
+        errEl.textContent = 'This feed is already added.'; errEl.hidden = false; return;
+      }
+      nameEl.value = ''; urlEl.value = '';
+      renderSuggestedFeeds(activeCatFilter());
+      loadCustomFeedsContent();
+    });
+  }
+
+  // ── Bootstrap ──────────────────────────────────────
+  initTabs();
+  initModal();
+  initCategoryFilter();
+  initCustomForm();
+  loadCustomFeedsContent();
 
   // ── Custom RSS feeds ───────────────────────────────
   const FEEDS_KEY = 'my-news-custom-feeds';
