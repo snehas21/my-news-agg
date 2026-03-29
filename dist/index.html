@@ -244,6 +244,15 @@
     box-shadow: var(--shadow-md);
     border-color: var(--border-hover);
   }
+  .card-img {
+    width: calc(100% + 40px);
+    margin: -18px -20px 0;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 14px 14px 0 0;
+    display: block;
+    margin-top: -18px;
+  }
   .card-top {
     display: flex;
     align-items: center;
@@ -321,8 +330,8 @@
   footer a:hover { color: var(--accent); }
 
   /* ── Feed modal ──────────────────────────────────── */
-  .modal-overlay { display: flex; position: fixed; inset: 0; background: rgba(15,23,42,0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
-  .modal-overlay[hidden] { display: none; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
+  .modal-overlay.open { display: flex; }
   .modal {
     background: var(--card);
     border-radius: 18px;
@@ -509,7 +518,7 @@
       <div class="header-right">
         <span class="updated-badge">
           <span class="updated-dot"></span>
-          Updated 2026-03-28 04:05 UTC
+          Updated 2026-03-29 18:16 UTC
         </span>
         <div class="sources">
           <span class="pill src-bbc-world">BBC World</span><span class="pill src-cbc-top-stories">CBC Top Stories</span><span class="pill src-cbc-canada">CBC Canada</span><span class="pill src-the-verge">The Verge</span><span class="pill src-hacker-news--top-">Hacker News (Top)</span><span class="pill src-techcrunch--top-">Techcrunch (Top)</span><span class="pill src-zdnet--top-">ZDNet (Top)</span><span class="pill src-engadget--top-">Engadget (Top)</span><span class="pill src-yahoo-finance">Yahoo Finance</span><span class="pill src-ars-technica">Ars Technica</span><span class="pill src-ndtv-top-stories">NDTV Top Stories</span><span class="pill src-indian-express-trending">Indian Express Trending</span>
@@ -542,7 +551,7 @@
     </section>
   </main>
 
-  <div class="modal-overlay" id="feeds-modal" hidden>
+  <div class="modal-overlay" id="feeds-modal">
     <div class="modal">
       <div class="modal-header">
         <h2>RSS Feed Sources</h2>
@@ -838,13 +847,13 @@
     });
 
     openBtn.addEventListener('click', function() {
-      overlay.hidden = false;
+      overlay.classList.add('open');
       showPanel('suggested');
       renderSuggestedFeeds('all');
     });
-    closeBtn.addEventListener('click', function() { overlay.hidden = true; });
-    overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.hidden = true; });
-    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') overlay.hidden = true; });
+    closeBtn.addEventListener('click', function() { overlay.classList.remove('open'); });
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.classList.remove('open'); });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') overlay.classList.remove('open'); });
   }
 
   // ── Category filter in modal ───────────────────────

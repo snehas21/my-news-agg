@@ -10,8 +10,18 @@ const DIST = path.join(ROOT, "dist");
 
 const parser = new Parser({
   timeout: 15000,
-  customFields: { item: ["category", "categories"] }
+  customFields: { item: ["category", "categories", ["media:content", "mediaContent"], ["media:thumbnail", "mediaThumbnail"]] }
 });
+
+const extractImage = (it) => {
+  const url =
+    it.mediaContent?.$?.url ||
+    it.mediaThumbnail?.$?.url ||
+    it.enclosure?.url ||
+    null;
+  if (!url || !/^https?:\/\//i.test(url)) return null;
+  return url;
+};
 
 const safe = (html) =>
   sanitizeHtml(html || "", {
@@ -73,8 +83,10 @@ const itemToCard = (it, sourceName) => {
   const ts = humanTime(it.isoDate || it.pubDate);
   const slug = sourceSlug(sourceName);
   const cat = categorize(title, desc, sourceName);
+  const img = extractImage(it);
   return `
   <article class="card" data-cat="${cat}">
+    ${img ? `<img class="card-img" src="${img}" alt="" loading="lazy" onerror="this.style.display='none'"/>` : ""}
     <div class="card-top">
       <span class="source-badge src-${slug}">${sourceName}</span>
       <time class="card-time">${ts}</time>
@@ -330,6 +342,15 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     box-shadow: var(--shadow-md);
     border-color: var(--border-hover);
   }
+  .card-img {
+    width: calc(100% + 40px);
+    margin: -18px -20px 0;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 14px 14px 0 0;
+    display: block;
+    margin-top: -18px;
+  }
   .card-top {
     display: flex;
     align-items: center;
@@ -407,8 +428,8 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   footer a:hover { color: var(--accent); }
 
   /* ── Feed modal ──────────────────────────────────── */
-  .modal-overlay { display: flex; position: fixed; inset: 0; background: rgba(15,23,42,0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
-  .modal-overlay[hidden] { display: none; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
+  .modal-overlay.open { display: flex; }
   .modal {
     background: var(--card);
     border-radius: 18px;
@@ -628,7 +649,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     </section>
   </main>
 
-  <div class="modal-overlay" id="feeds-modal" hidden>
+  <div class="modal-overlay" id="feeds-modal">
     <div class="modal">
       <div class="modal-header">
         <h2>RSS Feed Sources</h2>
@@ -924,13 +945,13 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     });
 
     openBtn.addEventListener('click', function() {
-      overlay.hidden = false;
+      overlay.classList.add('open');
       showPanel('suggested');
       renderSuggestedFeeds('all');
     });
-    closeBtn.addEventListener('click', function() { overlay.hidden = true; });
-    overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.hidden = true; });
-    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') overlay.hidden = true; });
+    closeBtn.addEventListener('click', function() { overlay.classList.remove('open'); });
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.classList.remove('open'); });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') overlay.classList.remove('open'); });
   }
 
   // ── Category filter in modal ───────────────────────
