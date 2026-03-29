@@ -493,8 +493,8 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     transition: color .15s, border-color .15s;
   }
   .modal-tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .modal-tab-panel[hidden] { display: none; }
-  .modal-tab-panel { padding-top: 16px; display: flex; flex-direction: column; gap: 14px; }
+  .modal-tab-panel { display: none; padding-top: 16px; flex-direction: column; gap: 14px; }
+  .modal-tab-panel.active { display: flex; }
 
   /* ── Category filter chips ──────────────────────── */
   .cat-filter-btns { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -638,15 +638,6 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
       <button class="tab" data-tab="other">Other <span class="tab-count"></span></button>
     </nav>
     <section class="grid" id="main-grid">${cardsHTML}</section>
-
-    <section id="custom-section" hidden>
-      <div class="section-header" style="margin-top:48px">
-        <span class="section-label">Custom Feeds</span>
-        <div class="section-divider"></div>
-      </div>
-      <div id="custom-pills"></div>
-      <section class="grid" id="custom-grid"></section>
-    </section>
   </main>
 
   <div class="modal-overlay" id="feeds-modal">
@@ -660,7 +651,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
         <button class="modal-tab-btn" data-panel="custom">Add by URL</button>
         <button class="modal-tab-btn" data-panel="manage">Your Feeds</button>
       </div>
-      <div class="modal-tab-panel" id="panel-suggested">
+      <div class="modal-tab-panel active" id="panel-suggested">
         <div class="cat-filter-btns">
           <button class="cat-filter-btn active" data-cat="all">All</button>
           <button class="cat-filter-btn" data-cat="world">World</button>
@@ -672,7 +663,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
         </div>
         <div class="suggest-list" id="suggested-feeds-list"></div>
       </div>
-      <div class="modal-tab-panel" id="panel-custom" hidden>
+      <div class="modal-tab-panel" id="panel-custom">
         <form class="add-form" id="custom-feed-form">
           <div class="form-field">
             <label for="cf-name">Feed Name</label>
@@ -688,7 +679,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
           </div>
         </form>
       </div>
-      <div class="modal-tab-panel" id="panel-manage" hidden>
+      <div class="modal-tab-panel" id="panel-manage">
         <div class="sources-list" id="custom-feeds-list"></div>
       </div>
     </div>
@@ -748,7 +739,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   }
 
   // ── Tab filtering ──────────────────────────────────
-  function allCards() { return document.querySelectorAll('#main-grid .card[data-cat], #custom-grid .card[data-cat]'); }
+  function allCards() { return document.querySelectorAll('#main-grid .card[data-cat]'); }
 
   let activeTab = 'all';
 
@@ -812,9 +803,11 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     container.querySelectorAll('.btn-add-feed:not(.btn-added)').forEach(function(btn) {
       btn.addEventListener('click', function() {
         addCustomFeed({name: btn.dataset.name, url: btn.dataset.url, cat: btn.dataset.cat});
-        renderSuggestedFeeds(activeCatFilter());
+        btn.textContent = 'Added';
+        btn.classList.add('btn-added');
+        btn.disabled = true;
+        loadCustomFeeds();
         renderCustomFeedsList();
-        loadCustomFeedsContent();
       });
     });
   }
@@ -833,15 +826,17 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
           '<span class="src-item-name">' + feed.name + '</span>' +
           '<span class="src-item-url">' + feed.url + '</span>' +
         '</div>' +
-        '<button class="btn-remove" data-url="' + feed.url + '">Remove</button>' +
+        '<button class="btn-remove" data-url="' + feed.url + '" data-name="' + escapeHtml(feed.name) + '">Remove</button>' +
       '</div>';
     }).join('');
     list.querySelectorAll('.btn-remove').forEach(function(btn) {
       btn.addEventListener('click', function() {
+        var name = btn.dataset.name;
         removeCustomFeed(btn.dataset.url);
+        document.querySelectorAll('#main-grid .card[data-feed="' + name.replace(/"/g, '\\"') + '"]').forEach(function(c) { c.remove(); });
+        updateTabCounts();
         renderCustomFeedsList();
         renderSuggestedFeeds(activeCatFilter());
-        loadCustomFeedsContent();
       });
     });
   }
@@ -849,16 +844,8 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   // ── Client-side RSS fetching ───────────────────────
   var PROXY = 'https://api.allorigins.win/raw?url=';
 
-  function parseRSSXML(xml) {
-    var doc = (new DOMParser()).parseFromString(xml, 'application/xml');
-    return Array.from(doc.querySelectorAll('item, entry')).slice(0, 10).map(function(item) {
-      var title = (item.querySelector('title') || {}).textContent || '';
-      var linkEl = item.querySelector('link');
-      var link = (linkEl && (linkEl.getAttribute('href') || linkEl.textContent)) || '#';
-      var desc = (item.querySelector('description, summary') || {}).textContent || '';
-      var pubDate = (item.querySelector('pubDate, published, updated') || {}).textContent || '';
-      return {title: title.trim(), link: link.trim(), desc: desc.trim(), pubDate: pubDate.trim()};
-    });
+  function escapeHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   function timeAgo(dateStr) {
@@ -872,50 +859,72 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     return Math.floor(s/86400) + 'd ago';
   }
 
-  function escapeHtml(str) {
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  function catFromText(text) {
+    var t = (text || '').toLowerCase();
+    if (/\b(canada|canadian|toronto|vancouver|montreal|ottawa|cbc|trudeau)\b/.test(t)) return 'canada';
+    if (/\b(india|indian|modi|delhi|mumbai|ndtv|rupee|isro)\b/.test(t)) return 'india';
+    if (/\b(ai\b|artificial intelligence|software|iphone|android|google|apple|microsoft|openai|chatgpt|chip|startup|cybersecurity)\b/.test(t)) return 'tech';
+    if (/\b(stocks?|economy|gdp|inflation|bitcoin|crypto|nasdaq|earnings|revenue|wall street|invest)\b/.test(t)) return 'business';
+    if (/\b(health|medical|vaccine|covid|cancer|climate|space|nasa|science|research|biology|physics)\b/.test(t)) return 'science';
+    if (/\b(war|conflict|ukraine|russia|china|israel|gaza|nato|election|military|president|minister)\b/.test(t)) return 'world';
+    return 'other';
   }
 
-  function loadCustomFeedsContent() {
+  function parseRSSXML(xml) {
+    var doc = (new DOMParser()).parseFromString(xml, 'application/xml');
+    return Array.from(doc.querySelectorAll('item, entry')).slice(0, 10).map(function(el) {
+      var title = (el.querySelector('title') || {}).textContent || '';
+      var linkEl = el.querySelector('link');
+      var link = (linkEl && (linkEl.getAttribute('href') || linkEl.textContent)) || '#';
+      var rawDesc = (el.querySelector('description, summary, content') || {}).textContent || '';
+      var desc = rawDesc.replace(/<[^>]*>/g, '').trim();
+      var pubDate = (el.querySelector('pubDate, published, updated') || {}).textContent || '';
+      // Image: media:content, media:thumbnail, enclosure, or first <img> in description
+      var img = null;
+      var mc = el.querySelector('content[url], content[medium="image"]');
+      var mt = el.querySelector('thumbnail');
+      var enc = el.querySelector('enclosure');
+      var imgTag = rawDesc.match(/<img[^>]+src=["']([^"']+)["']/i);
+      if (mc) img = mc.getAttribute('url');
+      else if (mt) img = mt.getAttribute('url');
+      else if (enc && /image/i.test(enc.getAttribute('type') || '')) img = enc.getAttribute('url');
+      else if (imgTag) img = imgTag[1];
+      return { title: title.trim(), link: link.trim(), desc: desc, pubDate: pubDate.trim(), img: img };
+    });
+  }
+
+  function makeCustomCard(item, feedName, feedCat) {
+    var cat = catFromText(item.title + ' ' + item.desc) || feedCat || 'other';
+    var slug = feedName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    var validImg = item.img && /^https?:\/\//i.test(item.img);
+    return '<article class="card" data-cat="' + escapeHtml(cat) + '" data-feed="' + escapeHtml(feedName) + '">' +
+      (validImg ? '<img class="card-img" src="' + escapeHtml(item.img) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'"/>' : '') +
+      '<div class="card-top">' +
+        '<span class="source-badge src-' + escapeHtml(slug) + '">' + escapeHtml(feedName) + '</span>' +
+        '<time class="card-time">' + timeAgo(item.pubDate) + '</time>' +
+      '</div>' +
+      '<h3><a href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener">' + escapeHtml(item.title || '(untitled)') + '</a></h3>' +
+      (item.desc ? '<p class="desc">' + escapeHtml(item.desc.substring(0, 250)) + '</p>' : '') +
+    '</article>';
+  }
+
+  function loadCustomFeeds() {
     var feeds = getCustomFeeds();
-    var section = document.getElementById('custom-section');
-    var grid = document.getElementById('custom-grid');
-    var pills = document.getElementById('custom-pills');
-    if (!feeds.length) { section.hidden = true; return; }
-    section.hidden = false;
-    pills.innerHTML = feeds.map(function(f) { return '<span class="pill">' + escapeHtml(f.name) + '</span>'; }).join('');
-    grid.innerHTML = '<p class="custom-loading">Loading custom feeds\u2026</p>';
-    var allArticles = [];
-    var pending = feeds.length;
+    // Remove previously injected custom cards
+    document.querySelectorAll('#main-grid .card[data-feed]').forEach(function(c) { c.remove(); });
     feeds.forEach(function(feed) {
       fetch(PROXY + encodeURIComponent(feed.url))
         .then(function(r) { return r.text(); })
         .then(function(xml) {
-          parseRSSXML(xml).forEach(function(item) {
-            allArticles.push({
-              date: new Date(item.pubDate || 0),
-              html: '<article class="card" data-cat="' + escapeHtml(feed.cat || 'other') + '">' +
-                '<div class="card-top">' +
-                  '<span class="source-badge src-custom-feed">' + escapeHtml(feed.name) + '</span>' +
-                  '<time class="card-time">' + timeAgo(item.pubDate) + '</time>' +
-                '</div>' +
-                '<h3><a href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener">' + escapeHtml(item.title) + '</a></h3>' +
-                (item.desc ? '<p class="desc">' + escapeHtml(item.desc.substring(0, 200)) + '</p>' : '') +
-              '</article>'
-            });
+          var items = parseRSSXML(xml);
+          var grid = document.getElementById('main-grid');
+          items.reverse().forEach(function(item) {
+            grid.insertAdjacentHTML('afterbegin', makeCustomCard(item, feed.name, feed.cat));
           });
+          updateTabCounts();
+          applyFilter();
         })
-        .catch(function() {})
-        .then(function() {
-          pending--;
-          if (pending === 0) {
-            allArticles.sort(function(a,b) { return b.date - a.date; });
-            grid.innerHTML = allArticles.length
-              ? allArticles.map(function(a) { return a.html; }).join('')
-              : '<p class="custom-loading">Could not load feeds. They may not support CORS.</p>';
-            updateTabCounts();
-          }
-        });
+        .catch(function() {});
     });
   }
 
@@ -933,7 +942,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
 
     function showPanel(name) {
       tabBtns.forEach(function(b) { b.classList.toggle('active', b.dataset.panel === name); });
-      Object.keys(panels).forEach(function(k) { panels[k].hidden = k !== name; });
+      Object.keys(panels).forEach(function(k) { panels[k].classList.toggle('active', k === name); });
     }
 
     tabBtns.forEach(function(btn) {
@@ -983,7 +992,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
       }
       nameEl.value = ''; urlEl.value = '';
       renderSuggestedFeeds(activeCatFilter());
-      loadCustomFeedsContent();
+      loadCustomFeeds();
     });
   }
 
@@ -992,7 +1001,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   initModal();
   initCategoryFilter();
   initCustomForm();
-  loadCustomFeedsContent();
+  loadCustomFeeds();
 
 })();
 </script>
