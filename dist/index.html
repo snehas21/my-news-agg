@@ -518,7 +518,7 @@
       <div class="header-right">
         <span class="updated-badge">
           <span class="updated-dot"></span>
-          Updated 2026-03-29 22:01 UTC
+          Updated 2026-03-30 21:09 UTC
         </span>
         <div class="sources">
           <span class="pill src-bbc-world">BBC World</span><span class="pill src-cbc-top-stories">CBC Top Stories</span><span class="pill src-cbc-canada">CBC Canada</span><span class="pill src-the-verge">The Verge</span><span class="pill src-hacker-news--top-">Hacker News (Top)</span><span class="pill src-techcrunch--top-">Techcrunch (Top)</span><span class="pill src-zdnet--top-">ZDNet (Top)</span><span class="pill src-engadget--top-">Engadget (Top)</span><span class="pill src-yahoo-finance">Yahoo Finance</span><span class="pill src-ars-technica">Ars Technica</span><span class="pill src-ndtv-top-stories">NDTV Top Stories</span><span class="pill src-indian-express-trending">Indian Express Trending</span>
@@ -800,7 +800,7 @@
     var slug = feedName.toLowerCase().replace(/[^a-z0-9]/g, '-');
     var validImg = item.img && /^https?:///i.test(item.img);
     return '<article class="card" data-cat="' + escapeHtml(cat) + '" data-feed="' + escapeHtml(feedName) + '">' +
-      (validImg ? '<img class="card-img" src="' + escapeHtml(item.img) + '" alt="" loading="lazy" onerror="this.style.display='none'"/>' : '') +
+      (validImg ? '<img class="card-img" src="' + escapeHtml(item.img) + '" alt="" loading="lazy" onerror="this.remove()"/>' : '') +
       '<div class="card-top">' +
         '<span class="source-badge src-' + escapeHtml(slug) + '">' + escapeHtml(feedName) + '</span>' +
         '<time class="card-time">' + timeAgo(item.pubDate) + '</time>' +

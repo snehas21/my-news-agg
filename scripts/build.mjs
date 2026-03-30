@@ -898,7 +898,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     var slug = feedName.toLowerCase().replace(/[^a-z0-9]/g, '-');
     var validImg = item.img && /^https?:\/\//i.test(item.img);
     return '<article class="card" data-cat="' + escapeHtml(cat) + '" data-feed="' + escapeHtml(feedName) + '">' +
-      (validImg ? '<img class="card-img" src="' + escapeHtml(item.img) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'"/>' : '') +
+      (validImg ? '<img class="card-img" src="' + escapeHtml(item.img) + '" alt="" loading="lazy" onerror="this.remove()"/>' : '') +
       '<div class="card-top">' +
         '<span class="source-badge src-' + escapeHtml(slug) + '">' + escapeHtml(feedName) + '</span>' +
         '<time class="card-time">' + timeAgo(item.pubDate) + '</time>' +
