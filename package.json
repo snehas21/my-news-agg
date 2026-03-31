@@ -3,13 +3,16 @@
   "version": "1.0.0",
   "type": "module",
   "private": true,
-  "scripts": { 
+  "scripts": {
     "build": "node scripts/build.mjs"
   },
   "dependencies": {
-    "rss-parser": "^3.13.0",
+    "luxon": "^3.5.0",
     "node-html-parser": "^6.1.13",
-    "sanitize-html": "^2.13.0",
-    "luxon": "^3.5.0"
+    "rss-parser": "^3.13.0",
+    "sanitize-html": "^2.13.0"
+  },
+  "devDependencies": {
+    "jsdom": "^29.0.1"
   }
 }
