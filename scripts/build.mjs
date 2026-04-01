@@ -63,8 +63,10 @@ const CATEGORY_RULES = [
   { key: "science",  re: /\b(health|medical|drug|vaccine|cancer|disease|treatment|surgery|hospital|clinical|therapy|covid|pandemic|climate|global warming|space|nasa|spacex|research|scientists?|biology|physics|quantum|asteroid|planet|species|genome|crispr|evolution)\b/i },
   { key: "tech",     re: /\b(ai\b|artificial intelligence|machine learning|software|hardware|\bapp\b|iphone|android|google|apple|microsoft|\bmeta\b|amazon|chip|gpu|cpu|startup|developer|coding|programming|cloud|cybersecurity|data breach|hack\w*|robot\w*|gadget|smartphone|electric vehicle|\bev\b|autonomous|openai|llm|chatgpt|algorithm|data center)\b/i },
 ];
-const TECH_SOURCES = new Set(["the verge", "hacker news", "techcrunch", "zdnet", "engadget"]);
+const TECH_SOURCES  = new Set(["the verge", "hacker news", "techcrunch", "zdnet", "engadget", "wired", "ars technica"]);
 const CANADA_SOURCES = new Set(["cbc top stories", "cbc canada"]);
+const INDIA_SOURCES  = new Set(["ndtv", "the hindu", "indian express"]);
+const SCIENCE_SOURCES = new Set(["nasa", "science daily"]);
 
 const categorize = (title, desc, sourceName) => {
   const text = (title + " " + (desc || "")).toLowerCase();
@@ -72,7 +74,9 @@ const categorize = (title, desc, sourceName) => {
     if (re.test(text)) return key;
   }
   if (CANADA_SOURCES.has(sourceName.toLowerCase())) return "canada";
+  if (INDIA_SOURCES.has(sourceName.toLowerCase())) return "india";
   if (TECH_SOURCES.has(sourceName.toLowerCase())) return "tech";
+  if (SCIENCE_SOURCES.has(sourceName.toLowerCase())) return "science";
   return "other";
 };
 
