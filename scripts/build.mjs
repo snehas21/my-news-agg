@@ -63,8 +63,10 @@ const CATEGORY_RULES = [
   { key: "science",  re: /\b(health|medical|drug|vaccine|cancer|disease|treatment|surgery|hospital|clinical|therapy|covid|pandemic|climate|global warming|space|nasa|spacex|research|scientists?|biology|physics|quantum|asteroid|planet|species|genome|crispr|evolution)\b/i },
   { key: "tech",     re: /\b(ai\b|artificial intelligence|machine learning|software|hardware|\bapp\b|iphone|android|google|apple|microsoft|\bmeta\b|amazon|chip|gpu|cpu|startup|developer|coding|programming|cloud|cybersecurity|data breach|hack\w*|robot\w*|gadget|smartphone|electric vehicle|\bev\b|autonomous|openai|llm|chatgpt|algorithm|data center)\b/i },
 ];
-const TECH_SOURCES = new Set(["the verge", "hacker news", "techcrunch", "zdnet", "engadget"]);
+const TECH_SOURCES  = new Set(["the verge", "hacker news", "techcrunch", "zdnet", "engadget", "wired", "ars technica"]);
 const CANADA_SOURCES = new Set(["cbc top stories", "cbc canada"]);
+const INDIA_SOURCES  = new Set(["ndtv", "the hindu", "indian express"]);
+const SCIENCE_SOURCES = new Set(["nasa", "science daily"]);
 
 const categorize = (title, desc, sourceName) => {
   const text = (title + " " + (desc || "")).toLowerCase();
@@ -72,7 +74,9 @@ const categorize = (title, desc, sourceName) => {
     if (re.test(text)) return key;
   }
   if (CANADA_SOURCES.has(sourceName.toLowerCase())) return "canada";
+  if (INDIA_SOURCES.has(sourceName.toLowerCase())) return "india";
   if (TECH_SOURCES.has(sourceName.toLowerCase())) return "tech";
+  if (SCIENCE_SOURCES.has(sourceName.toLowerCase())) return "science";
   return "other";
 };
 
@@ -701,7 +705,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     {name:"Al Jazeera English",    url:"https://www.aljazeera.com/xml/rss/all.xml",                          cat:"world",    desc:"Global news from Al Jazeera"},
     {name:"Associated Press",      url:"https://rsshub.app/apnews/topics/apf-topnews",                       cat:"world",    desc:"Breaking news from the AP wire"},
     {name:"MIT Technology Review", url:"https://www.technologyreview.com/feed/",                             cat:"tech",     desc:"Deep-dive tech journalism from MIT"},
-    {name:"Wired",                 url:"https://www.wired.com/feed/rss",                                     cat:"tech",     desc:"Tech, science and culture from Wired"},
+    {name:"The Register",          url:"https://www.theregister.com/headlines.atom",                         cat:"tech",     desc:"Free enterprise & IT news"},
     {name:"The Register",          url:"https://www.theregister.com/headlines.atom",                         cat:"tech",     desc:"Enterprise and IT news"},
     {name:"Slashdot",              url:"https://rss.slashdot.org/Slashdot/slashdotMain",                     cat:"tech",     desc:"Tech news for nerds, stuff that matters"},
     {name:"9to5Mac",               url:"https://9to5mac.com/feed/",                                          cat:"tech",     desc:"Apple news and rumours"},
@@ -710,11 +714,11 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     {name:"Science Daily",         url:"https://www.sciencedaily.com/rss/top/science.xml",                   cat:"science",  desc:"Latest research news across all sciences"},
     {name:"New Scientist",         url:"https://www.newscientist.com/feed/home/",                            cat:"science",  desc:"Science and technology news"},
     {name:"Scientific American",   url:"https://www.scientificamerican.com/platform/feeds/news.xml",         cat:"science",  desc:"In-depth science news and analysis"},
-    {name:"MarketWatch Top Stories",url:"https://feeds.marketwatch.com/marketwatch/topstories/",             cat:"business", desc:"Financial news from MarketWatch"},
-    {name:"Seeking Alpha",         url:"https://seekingalpha.com/market_currents.xml",                       cat:"business", desc:"Stock market news and analysis"},
+    {name:"Investopedia",           url:"https://www.investopedia.com/feedbuilder/feed/getfeed/?feedName=rss_headline", cat:"business", desc:"Free finance and investing news"},
+    {name:"Yahoo Finance",         url:"https://finance.yahoo.com/news/rssindex",                            cat:"business", desc:"Free markets and finance news"},
     {name:"NDTV Top Stories",      url:"https://feeds.feedburner.com/ndtvnews-top-stories",                  cat:"india",    desc:"Top stories from NDTV India"},
     {name:"Times of India",        url:"https://timesofindia.indiatimes.com/rssfeedstopstories.cms",         cat:"india",    desc:"India's most-read English newspaper"},
-    {name:"The Hindu",             url:"https://www.thehindu.com/feeder/default.rss",                        cat:"india",    desc:"Quality journalism from The Hindu"},
+    {name:"Times of India",        url:"https://timesofindia.indiatimes.com/rssfeedstopstories.cms",          cat:"india",    desc:"India's most-read free English newspaper"},
     {name:"BBC Sport",             url:"https://feeds.bbci.co.uk/sport/rss.xml",                             cat:"other",    desc:"Sports coverage from BBC"},
     {name:"ESPN Headlines",        url:"https://www.espn.com/espn/rss/news",                                 cat:"other",    desc:"Sports news from ESPN"},
     {name:"Lifehacker",            url:"https://lifehacker.com/feed/rss",                                    cat:"other",    desc:"Life hacks and productivity tips"},
