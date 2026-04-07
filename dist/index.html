@@ -318,10 +318,15 @@
 
   .custom-loading {
     grid-column: 1/-1;
+    text-align: center;
+    color: var(--muted);
+    padding: 24px;
+  }
+
   /* ── Footer ──────────────────────────────────────── */
   footer {
     border-top: 1px solid var(--border);
-    padding: 20px 24px;
+    padding: 24px;
     text-align: center;
     font-size: 12px;
     color: var(--muted);
@@ -476,17 +481,6 @@
     cursor: default;
   }
 
-  /* ── Custom feeds section ───────────────────────── */
-  #custom-section { margin-top: 48px; }
-  #custom-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
-
-  /* ── Footer ──────────────────────────────────────── */
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 24px;
-    text-align: center;
-    font-size: 12px;
-    color: var(--muted);
   /* ── Responsive – tablet ─────────────────────────── */
   @media (max-width: 1024px) {
     .grid { grid-template-columns: repeat(2, 1fr); }
@@ -518,10 +512,10 @@
       <div class="header-right">
         <span class="updated-badge">
           <span class="updated-dot"></span>
-          Updated 2026-04-01 01:02 UTC
+          Updated 2026-04-07 03:37 UTC
         </span>
         <div class="sources">
-          <span class="pill src-bbc-world">BBC World</span><span class="pill src-reuters">Reuters</span><span class="pill src-npr-news">NPR News</span><span class="pill src-the-guardian">The Guardian</span><span class="pill src-al-jazeera">Al Jazeera</span><span class="pill src-cbc-top-stories">CBC Top Stories</span><span class="pill src-cbc-canada">CBC Canada</span><span class="pill src-the-verge">The Verge</span><span class="pill src-hacker-news">Hacker News</span><span class="pill src-techcrunch">TechCrunch</span><span class="pill src-ars-technica">Ars Technica</span><span class="pill src-wired">Wired</span><span class="pill src-yahoo-finance">Yahoo Finance</span><span class="pill src-marketwatch">MarketWatch</span><span class="pill src-nasa">NASA</span><span class="pill src-science-daily">Science Daily</span><span class="pill src-ndtv">NDTV</span><span class="pill src-the-hindu">The Hindu</span><span class="pill src-indian-express">Indian Express</span><span class="pill src-bbc-sport">BBC Sport</span>
+          <span class="pill src-bbc-world">BBC World</span><span class="pill src-associated-press">Associated Press</span><span class="pill src-npr-news">NPR News</span><span class="pill src-the-guardian">The Guardian</span><span class="pill src-al-jazeera">Al Jazeera</span><span class="pill src-cbc-top-stories">CBC Top Stories</span><span class="pill src-cbc-canada">CBC Canada</span><span class="pill src-the-verge">The Verge</span><span class="pill src-hacker-news">Hacker News</span><span class="pill src-techcrunch">TechCrunch</span><span class="pill src-ars-technica">Ars Technica</span><span class="pill src-the-register">The Register</span><span class="pill src-yahoo-finance">Yahoo Finance</span><span class="pill src-investopedia">Investopedia</span><span class="pill src-nasa">NASA</span><span class="pill src-science-daily">Science Daily</span><span class="pill src-ndtv">NDTV</span><span class="pill src-times-of-india">Times of India</span><span class="pill src-indian-express">Indian Express</span><span class="pill src-bbc-sport">BBC Sport</span>
         </div>
         <button class="btn-discover" id="open-feeds-modal">+ Discover Feeds</button>
       </div>
@@ -603,7 +597,7 @@
     {name:"Al Jazeera English",    url:"https://www.aljazeera.com/xml/rss/all.xml",                          cat:"world",    desc:"Global news from Al Jazeera"},
     {name:"Associated Press",      url:"https://rsshub.app/apnews/topics/apf-topnews",                       cat:"world",    desc:"Breaking news from the AP wire"},
     {name:"MIT Technology Review", url:"https://www.technologyreview.com/feed/",                             cat:"tech",     desc:"Deep-dive tech journalism from MIT"},
-    {name:"Wired",                 url:"https://www.wired.com/feed/rss",                                     cat:"tech",     desc:"Tech, science and culture from Wired"},
+    {name:"The Register",          url:"https://www.theregister.com/headlines.atom",                         cat:"tech",     desc:"Free enterprise & IT news"},
     {name:"The Register",          url:"https://www.theregister.com/headlines.atom",                         cat:"tech",     desc:"Enterprise and IT news"},
     {name:"Slashdot",              url:"https://rss.slashdot.org/Slashdot/slashdotMain",                     cat:"tech",     desc:"Tech news for nerds, stuff that matters"},
     {name:"9to5Mac",               url:"https://9to5mac.com/feed/",                                          cat:"tech",     desc:"Apple news and rumours"},
@@ -612,11 +606,11 @@
     {name:"Science Daily",         url:"https://www.sciencedaily.com/rss/top/science.xml",                   cat:"science",  desc:"Latest research news across all sciences"},
     {name:"New Scientist",         url:"https://www.newscientist.com/feed/home/",                            cat:"science",  desc:"Science and technology news"},
     {name:"Scientific American",   url:"https://www.scientificamerican.com/platform/feeds/news.xml",         cat:"science",  desc:"In-depth science news and analysis"},
-    {name:"MarketWatch Top Stories",url:"https://feeds.marketwatch.com/marketwatch/topstories/",             cat:"business", desc:"Financial news from MarketWatch"},
-    {name:"Seeking Alpha",         url:"https://seekingalpha.com/market_currents.xml",                       cat:"business", desc:"Stock market news and analysis"},
+    {name:"Investopedia",           url:"https://www.investopedia.com/feedbuilder/feed/getfeed/?feedName=rss_headline", cat:"business", desc:"Free finance and investing news"},
+    {name:"Yahoo Finance",         url:"https://finance.yahoo.com/news/rssindex",                            cat:"business", desc:"Free markets and finance news"},
     {name:"NDTV Top Stories",      url:"https://feeds.feedburner.com/ndtvnews-top-stories",                  cat:"india",    desc:"Top stories from NDTV India"},
     {name:"Times of India",        url:"https://timesofindia.indiatimes.com/rssfeedstopstories.cms",         cat:"india",    desc:"India's most-read English newspaper"},
-    {name:"The Hindu",             url:"https://www.thehindu.com/feeder/default.rss",                        cat:"india",    desc:"Quality journalism from The Hindu"},
+    {name:"Times of India",        url:"https://timesofindia.indiatimes.com/rssfeedstopstories.cms",          cat:"india",    desc:"India's most-read free English newspaper"},
     {name:"BBC Sport",             url:"https://feeds.bbci.co.uk/sport/rss.xml",                             cat:"other",    desc:"Sports coverage from BBC"},
     {name:"ESPN Headlines",        url:"https://www.espn.com/espn/rss/news",                                 cat:"other",    desc:"Sports news from ESPN"},
     {name:"Lifehacker",            url:"https://lifehacker.com/feed/rss",                                    cat:"other",    desc:"Life hacks and productivity tips"},
