@@ -420,10 +420,15 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
 
   .custom-loading {
     grid-column: 1/-1;
+    text-align: center;
+    color: var(--muted);
+    padding: 24px;
+  }
+
   /* ── Footer ──────────────────────────────────────── */
   footer {
     border-top: 1px solid var(--border);
-    padding: 20px 24px;
+    padding: 24px;
     text-align: center;
     font-size: 12px;
     color: var(--muted);
@@ -578,17 +583,6 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     cursor: default;
   }
 
-  /* ── Custom feeds section ───────────────────────── */
-  #custom-section { margin-top: 48px; }
-  #custom-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
-
-  /* ── Footer ──────────────────────────────────────── */
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 24px;
-    text-align: center;
-    font-size: 12px;
-    color: var(--muted);
   /* ── Responsive – tablet ─────────────────────────── */
   @media (max-width: 1024px) {
     .grid { grid-template-columns: repeat(2, 1fr); }
