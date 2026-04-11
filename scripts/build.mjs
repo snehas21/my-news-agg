@@ -63,10 +63,26 @@ const CATEGORY_RULES = [
   { key: "science",  re: /\b(health|medical|drug|vaccine|cancer|disease|treatment|surgery|hospital|clinical|therapy|covid|pandemic|climate|global warming|space|nasa|spacex|research|scientists?|biology|physics|quantum|asteroid|planet|species|genome|crispr|evolution)\b/i },
   { key: "tech",     re: /\b(ai\b|artificial intelligence|machine learning|software|hardware|\bapp\b|iphone|android|google|apple|microsoft|\bmeta\b|amazon|chip|gpu|cpu|startup|developer|coding|programming|cloud|cybersecurity|data breach|hack\w*|robot\w*|gadget|smartphone|electric vehicle|\bev\b|autonomous|openai|llm|chatgpt|algorithm|data center)\b/i },
 ];
-const TECH_SOURCES  = new Set(["the verge", "hacker news", "techcrunch", "zdnet", "engadget", "wired", "ars technica"]);
+const TECH_SOURCES   = new Set(["the verge", "hacker news", "techcrunch", "zdnet", "engadget", "wired", "ars technica", "the register"]);
 const CANADA_SOURCES = new Set(["cbc top stories", "cbc canada"]);
-const INDIA_SOURCES  = new Set(["ndtv", "the hindu", "indian express"]);
+const INDIA_SOURCES  = new Set(["ndtv", "the hindu", "indian express", "times of india"]);
 const SCIENCE_SOURCES = new Set(["nasa", "science daily"]);
+
+const SOURCE_DOMAINS = {
+  "BBC World": "bbc.co.uk", "BBC Sport": "bbc.co.uk",
+  "Associated Press": "apnews.com", "NPR News": "npr.org",
+  "The Guardian": "theguardian.com", "Al Jazeera": "aljazeera.com",
+  "CBC Top Stories": "cbc.ca", "CBC Canada": "cbc.ca",
+  "The Verge": "theverge.com", "Hacker News": "ycombinator.com",
+  "TechCrunch": "techcrunch.com", "Ars Technica": "arstechnica.com",
+  "The Register": "theregister.com", "Wired": "wired.com",
+  "Yahoo Finance": "yahoo.com", "Investopedia": "investopedia.com",
+  "NASA": "nasa.gov", "Science Daily": "sciencedaily.com",
+  "NDTV": "ndtv.com", "Times of India": "timesofindia.com",
+  "Indian Express": "indianexpress.com",
+};
+
+const CAT_LABEL = { canada:"Canada", world:"World", india:"India", tech:"Tech", business:"Business", science:"Science", other:"Other" };
 
 const categorize = (title, desc, sourceName) => {
   const text = (title + " " + (desc || "")).toLowerCase();
@@ -85,18 +101,25 @@ const itemToCard = (it, sourceName) => {
   const link = it.link || "#";
   const desc = safe(it.contentSnippet || it.content || "");
   const ts = humanTime(it.isoDate || it.pubDate);
-  const slug = sourceSlug(sourceName);
   const cat = categorize(title, desc, sourceName);
   const img = extractImage(it);
+  const domain = SOURCE_DOMAINS[sourceName] || "";
+  const label = CAT_LABEL[cat] || cat;
   return `
-  <article class="card" data-cat="${cat}">
-    ${img ? `<img class="card-img" src="${img}" alt="" loading="lazy" onerror="this.style.display='none'"/>` : ""}
-    <div class="card-top">
-      <span class="source-badge src-${slug}">${sourceName}</span>
-      <time class="card-time">${ts}</time>
+  <article class="card${img ? "" : " card--no-img"}" data-cat="${cat}">
+    <div class="card-media">
+      ${img ? `<img class="card-img" src="${img}" alt="" loading="lazy" onerror="this.remove()"/>` : ""}
+      <span class="cat-chip">${label}</span>
     </div>
-    <h3><a href="${link}" target="_blank" rel="noopener">${title}</a></h3>
-    ${desc ? `<p class="desc">${desc}</p>` : ""}
+    <div class="card-body">
+      <h3><a href="${link}" target="_blank" rel="noopener">${title}</a></h3>
+      ${desc ? `<p class="desc">${desc}</p>` : ""}
+      <div class="card-meta">
+        ${domain ? `<img class="favicon" src="https://www.google.com/s2/favicons?domain=${domain}&sz=32" alt="" loading="lazy" onerror="this.remove()"/>` : ""}
+        <span class="source-name">${sourceName}</span>
+        <time class="card-time">${ts}</time>
+      </div>
+    </div>
   </article>`;
 };
 
@@ -111,40 +134,33 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
+  /* ── Variables ──────────────────────────────────── */
   :root {
-    --bg: #f0f4f8;
+    --bg: #f7f5f0;
     --card: #ffffff;
-    --card-hover: #f8fafc;
-    --border: rgba(0,0,0,0.07);
-    --border-hover: rgba(99,102,241,0.45);
-    --fg: #0f172a;
-    --muted: #64748b;
-    --muted-light: #475569;
-    --accent: #6366f1;
-    --accent-glow: rgba(99,102,241,0.1);
-    --desc: #52637a;
-    --header-bg: rgba(240,244,248,0.92);
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 6px rgba(0,0,0,0.04);
-    --shadow-md: 0 8px 28px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.06);
+    --border: rgba(0,0,0,0.08);
+    --fg: #111111;
+    --muted: #666666;
+    --accent: #e63946;
+    --accent-dark: #c1121f;
+    --desc: #444444;
+    --shadow-sm: 0 1px 4px rgba(0,0,0,0.07), 0 0 1px rgba(0,0,0,0.05);
+    --shadow-md: 0 8px 28px rgba(0,0,0,0.13), 0 2px 6px rgba(0,0,0,0.07);
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #0d1117;
-      --card: #161b22;
-      --card-hover: #1c2330;
-      --border: rgba(255,255,255,0.07);
-      --border-hover: rgba(129,140,248,0.5);
-      --fg: #e6edf3;
-      --muted: #7d8590;
-      --muted-light: #8b949e;
-      --accent: #818cf8;
-      --accent-glow: rgba(129,140,248,0.12);
-      --desc: #8b949e;
-      --header-bg: rgba(13,17,23,0.92);
-      --shadow-sm: 0 1px 3px rgba(0,0,0,0.3), 0 1px 6px rgba(0,0,0,0.2);
-      --shadow-md: 0 8px 28px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.25);
+      --bg: #111111;
+      --card: #1c1c1c;
+      --border: rgba(255,255,255,0.09);
+      --fg: #f0ede8;
+      --muted: #888888;
+      --desc: #aaaaaa;
+      --shadow-sm: 0 1px 4px rgba(0,0,0,0.35);
+      --shadow-md: 0 8px 28px rgba(0,0,0,0.5);
     }
   }
+
+  /* ── Reset ───────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
@@ -161,15 +177,14 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     position: sticky;
     top: 0;
     z-index: 10;
-    background: var(--header-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
+    background: #111111;
+    border-bottom: 3px solid var(--accent);
   }
   .header-inner {
     max-width: 1280px;
     margin: 0 auto;
-    padding: 13px 24px;
+    padding: 0 24px;
+    height: 58px;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -181,22 +196,19 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     flex-shrink: 0;
   }
   .brand-icon {
-    width: 34px; height: 34px;
-    background: linear-gradient(135deg, #6366f1 0%, #a78bfa 100%);
-    border-radius: 9px;
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 5px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 17px;
-    box-shadow: 0 2px 8px rgba(99,102,241,0.35);
+    font-size: 16px;
     flex-shrink: 0;
   }
   h1 {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 700;
-    letter-spacing: -0.4px;
-    background: linear-gradient(135deg, var(--fg) 0%, var(--accent) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    letter-spacing: -0.5px;
+    color: #ffffff;
+    font-family: Georgia, 'Times New Roman', serif;
   }
   .header-right {
     flex: 1;
@@ -210,44 +222,55 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: rgba(16,185,129,0.08);
-    border: 1px solid rgba(16,185,129,0.2);
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.13);
     border-radius: 999px;
     padding: 5px 12px;
     font-size: 11.5px;
     font-weight: 500;
-    color: #10b981;
+    color: rgba(255,255,255,0.65);
     white-space: nowrap;
     flex-shrink: 0;
   }
   .updated-dot {
     width: 6px; height: 6px;
-    background: #10b981;
+    background: #4ade80;
     border-radius: 50%;
     animation: pulse 2.5s ease-in-out infinite;
     flex-shrink: 0;
   }
   @keyframes pulse {
     0%,100% { opacity:1; transform:scale(1); }
-    50% { opacity:.35; transform:scale(.7); }
+    50% { opacity:.3; transform:scale(.65); }
   }
-  .sources {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-  }
+  .sources { display: none; }
   .pill {
     padding: 3px 9px;
-    border: 1px solid var(--border);
+    border: 1px solid rgba(255,255,255,0.15);
     border-radius: 999px;
-    color: var(--muted);
+    color: rgba(255,255,255,0.55);
     font-size: 11px;
     font-weight: 500;
-    background: var(--card);
-    cursor: default;
+    background: rgba(255,255,255,0.06);
     white-space: nowrap;
-    box-shadow: var(--shadow-sm);
   }
+
+  /* ── Discover button ─────────────────────────────── */
+  .btn-discover {
+    padding: 8px 18px;
+    background: var(--accent);
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background .15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .btn-discover:hover { background: var(--accent-dark); }
 
   /* ── Main ────────────────────────────────────────── */
   main {
@@ -259,158 +282,160 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   /* ── Category tabs ───────────────────────────────── */
   .tabs {
     display: flex;
-    gap: 6px;
+    gap: 2px;
     overflow-x: auto;
-    padding: 2px 0 14px;
-    margin-bottom: 20px;
+    padding: 0 0 0;
+    margin-bottom: 24px;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
+    border-bottom: 2px solid var(--border);
   }
   .tabs::-webkit-scrollbar { display: none; }
   .tab {
     flex-shrink: 0;
-    padding: 8px 16px;
-    min-height: 36px;
-    border: 1.5px solid var(--border);
-    border-radius: 999px;
-    background: var(--card);
-    color: var(--muted-light);
+    padding: 10px 16px;
+    min-height: 42px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    border-radius: 0;
+    background: transparent;
+    color: var(--muted);
     font-family: inherit;
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    transition: all .18s ease;
+    transition: all .15s ease;
     display: inline-flex;
     align-items: center;
     gap: 6px;
     white-space: nowrap;
-    box-shadow: var(--shadow-sm);
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
-  .tab:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
-  .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 4px 14px rgba(99,102,241,0.4); }
+  .tab:hover { color: var(--fg); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
   .tab-count {
     font-size: 11px;
     padding: 1px 6px;
     border-radius: 999px;
-    background: rgba(0,0,0,0.08);
+    background: rgba(0,0,0,0.06);
     color: inherit;
-    opacity: 0.7;
   }
-  .tab.active .tab-count { background: rgba(255,255,255,0.22); opacity: 1; }
+  @media (prefers-color-scheme: dark) {
+    .tab-count { background: rgba(255,255,255,0.08); }
+  }
 
   /* ── Grid ────────────────────────────────────────── */
   .grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
+    gap: 20px;
   }
+  /* Featured card: every 7th starting from 1st spans 2 columns */
+  .card:nth-child(7n+1) { grid-column: span 2; }
 
-  /* ── Cards ───────────────────────────────────────── */
+  /* ── Card ────────────────────────────────────────── */
   .card {
     background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 18px 20px 20px;
+    border-radius: 6px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    transition: transform .2s ease, box-shadow .22s ease, border-color .2s ease;
-    box-shadow: var(--shadow-sm);
-    position: relative;
     overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    transition: transform .2s ease, box-shadow .2s ease;
+    position: relative;
     animation: fadeUp .3s ease both;
   }
-  .card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: var(--cat-color, var(--accent));
-    border-radius: 14px 14px 0 0;
-  }
-  .card[data-cat="canada"]   { --cat-color: #ef4444; }
-  .card[data-cat="world"]    { --cat-color: #f59e0b; }
-  .card[data-cat="india"]    { --cat-color: #f97316; }
-  .card[data-cat="tech"]     { --cat-color: #6366f1; }
-  .card[data-cat="business"] { --cat-color: #10b981; }
-  .card[data-cat="science"]  { --cat-color: #06b6d4; }
-  .card[data-cat="other"]    { --cat-color: #94a3b8; }
   @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(8px); }
+    from { opacity: 0; transform: translateY(10px); }
     to   { opacity: 1; transform: translateY(0); }
   }
   .card:hover {
     transform: translateY(-3px);
     box-shadow: var(--shadow-md);
-    border-color: var(--border-hover);
   }
+
+  /* ── Card media ──────────────────────────────────── */
+  .card-media {
+    position: relative;
+    overflow: hidden;
+    background: #e8e4dc;
+    aspect-ratio: 16/9;
+    flex-shrink: 0;
+  }
+  @media (prefers-color-scheme: dark) {
+    .card-media { background: #2a2a2a; }
+  }
+  .card--no-img .card-media { display: none; }
   .card-img {
-    width: calc(100% + 40px);
-    margin: -18px -20px 0;
-    height: 160px;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    border-radius: 14px 14px 0 0;
     display: block;
-    margin-top: -18px;
+    transition: transform .45s ease;
   }
-  .card-top {
+  .card:hover .card-img { transform: scale(1.05); }
+  /* Featured card gets a wider image */
+  .card:nth-child(7n+1) .card-media { aspect-ratio: 21/9; }
+
+  /* ── Category chip ───────────────────────────────── */
+  .cat-chip {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+    pointer-events: none;
+  }
+  .card[data-cat="canada"]   .cat-chip { background: #c41e3a; }
+  .card[data-cat="world"]    .cat-chip { background: #1d4ed8; }
+  .card[data-cat="india"]    .cat-chip { background: #ea580c; }
+  .card[data-cat="tech"]     .cat-chip { background: #7c3aed; }
+  .card[data-cat="business"] .cat-chip { background: #059669; }
+  .card[data-cat="science"]  .cat-chip { background: #0891b2; }
+  .card[data-cat="other"]    .cat-chip { background: #64748b; }
+
+  /* ── Card body ───────────────────────────────────── */
+  .card-body {
+    flex: 1;
+    padding: 14px 16px 16px;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
     gap: 8px;
   }
-  .source-badge {
-    font-size: 10.5px;
-    font-weight: 700;
-    letter-spacing: .05em;
-    padding: 3px 9px;
-    border-radius: 999px;
-    text-transform: uppercase;
-    flex-shrink: 0;
-    max-width: 170px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  /* Source colours */
-  .src-bbc-world                  { background:rgba(220,38,38,.1);   color:#dc2626; border:1px solid rgba(220,38,38,.22); }
-  .src-cbc-top-stories            { background:rgba(196,30,58,.1);   color:#c41e3a; border:1px solid rgba(196,30,58,.22); }
-  .src-cbc-canada                 { background:rgba(196,30,58,.1);   color:#c41e3a; border:1px solid rgba(196,30,58,.22); }
-  .src-the-verge                  { background:rgba(219,39,119,.08); color:#db2777; border:1px solid rgba(219,39,119,.2); }
-  .src-hacker-news--top-          { background:rgba(251,146,60,.1);  color:#ea580c; border:1px solid rgba(234,88,12,.22); }
-  .src-techcrunch--top-           { background:rgba(5,150,105,.08);  color:#059669; border:1px solid rgba(5,150,105,.2); }
-  .src-zdnet--top-                { background:rgba(37,99,235,.08);  color:#2563eb; border:1px solid rgba(37,99,235,.2); }
-  .src-engadget--top-             { background:rgba(124,58,237,.08); color:#7c3aed; border:1px solid rgba(124,58,237,.2); }
-  .src-yahoo-finance              { background:rgba(99,102,241,.08); color:#4f46e5; border:1px solid rgba(99,102,241,.2); }
-  .src-ars-technica               { background:rgba(234,88,12,.08);  color:#ea580c; border:1px solid rgba(234,88,12,.2); }
-  .src-times-of-india-top-stores  { background:rgba(234,88,12,.1);   color:#c2410c; border:1px solid rgba(234,88,12,.22); }
-  .src-times-of-india-india       { background:rgba(234,88,12,.1);   color:#c2410c; border:1px solid rgba(234,88,12,.22); }
-  .src-ndtv-top-stories           { background:rgba(37,99,235,.08);  color:#2563eb; border:1px solid rgba(37,99,235,.2); }
-  .src-indian-express-trending    { background:rgba(5,150,105,.08);  color:#059669; border:1px solid rgba(5,150,105,.2); }
-  .src-custom-feed                { background:rgba(99,102,241,.08); color:#4f46e5; border:1px solid rgba(99,102,241,.2); }
-  .card-time {
-    font-size: 11px;
-    color: var(--muted);
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
   .card h3 {
-    font-size: 15px;
-    font-weight: 600;
-    line-height: 1.5;
-    letter-spacing: -0.1px;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: -0.15px;
   }
+  /* Featured card gets larger headline */
+  .card:nth-child(7n+1) h3 { font-size: 21px; }
   .card h3 a {
     color: var(--fg);
     text-decoration: none;
     transition: color .15s;
   }
   .card h3 a:hover { color: var(--accent); }
+  /* Stretch link to cover whole card */
+  .card h3 a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
   .desc {
-    font-size: 13px;
-    line-height: 1.65;
+    font-size: 13.5px;
+    line-height: 1.6;
     color: var(--desc);
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -418,6 +443,37 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     overflow: hidden;
   }
 
+  /* ── Card meta ───────────────────────────────────── */
+  .card-meta {
+    margin-top: auto;
+    padding-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-top: 1px solid var(--border);
+  }
+  .favicon {
+    width: 15px; height: 15px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .source-name {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--muted);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .card-time {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ── Loading placeholder ─────────────────────────── */
   .custom-loading {
     grid-column: 1/-1;
     text-align: center;
@@ -433,19 +489,30 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     font-size: 12px;
     color: var(--muted);
   }
-  footer a { color: var(--muted-light); text-decoration: none; }
+  footer a { color: var(--muted); text-decoration: none; }
   footer a:hover { color: var(--accent); }
 
-  /* ── Feed modal ──────────────────────────────────── */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
+  /* ── Modal overlay ───────────────────────────────── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.62);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
   .modal-overlay.open { display: flex; }
   .modal {
     background: var(--card);
-    border-radius: 18px;
+    border-radius: 10px;
     padding: 24px;
     width: 100%;
-    max-width: 460px;
-    box-shadow: 0 24px 64px rgba(0,0,0,.2);
+    max-width: 480px;
+    box-shadow: 0 24px 64px rgba(0,0,0,.28);
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -453,39 +520,33 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     overflow-y: auto;
     border: 1px solid var(--border);
   }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-header h2 {
+    font-size: 17px;
+    font-weight: 700;
+    font-family: Georgia, serif;
+  }
   .modal-close {
     width: 30px; height: 30px;
     border: none;
     background: var(--bg);
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 16px;
     display: flex; align-items: center; justify-content: center;
     color: var(--muted);
     transition: background .15s, color .15s;
   }
-  .modal-close:hover { color: var(--fg); }
-  /* ── Discover button ────────────────────────────── */
-  .btn-discover {
-    padding: 7px 16px;
-    background: var(--accent);
-    color: #fff;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 600;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background .15s;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .btn-discover:hover { background: #4f46e5; }
+  .modal-close:hover { background: var(--accent); color: #fff; }
 
-  /* ── Modal tabs ─────────────────────────────────── */
+  /* ── Modal tabs ──────────────────────────────────── */
   .modal-tabs {
     display: flex;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 2px solid var(--border);
     margin: -8px 0 0;
   }
   .modal-tab-btn {
@@ -494,42 +555,45 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     background: none;
     border: none;
     border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
     font-family: inherit;
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--muted);
     cursor: pointer;
     transition: color .15s, border-color .15s;
   }
   .modal-tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .modal-tab-panel { display: none; padding-top: 16px; flex-direction: column; gap: 14px; }
+  .modal-tab-panel { display: none; padding-top: 8px; flex-direction: column; gap: 14px; }
   .modal-tab-panel.active { display: flex; }
 
-  /* ── Category filter chips ──────────────────────── */
+  /* ── Category filter chips (modal) ──────────────── */
   .cat-filter-btns { display: flex; flex-wrap: wrap; gap: 6px; }
   .cat-filter-btn {
     padding: 4px 12px;
-    border: 1.5px solid var(--border);
+    border: 1px solid var(--border);
     border-radius: 999px;
     background: transparent;
-    color: var(--muted-light);
+    color: var(--muted);
     font-family: inherit;
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
-    transition: border-color .15s, color .15s, background .15s;
+    transition: all .15s;
   }
-  .cat-filter-btn:hover { border-color: var(--accent); color: var(--fg); }
-  .cat-filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .cat-filter-btn:hover { border-color: var(--fg); color: var(--fg); }
+  .cat-filter-btn.active { background: var(--fg); border-color: var(--fg); color: #ffffff; }
+  @media (prefers-color-scheme: dark) {
+    .cat-filter-btn.active { color: #111111; }
+  }
 
-  /* ── Suggested feed items ───────────────────────── */
+  /* ── Suggested feed list ─────────────────────────── */
   .suggest-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
     max-height: 320px;
     overflow-y: auto;
-    padding-right: 2px;
   }
   .suggest-item {
     display: flex;
@@ -539,35 +603,36 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     padding: 10px 12px;
     background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 7px;
   }
   .suggest-info { display: flex; flex-direction: column; gap: 3px; flex: 1; overflow: hidden; }
   .suggest-name { font-size: 13px; font-weight: 600; color: var(--fg); }
   .suggest-desc { font-size: 11px; color: var(--muted); }
   .cat-badge {
     display: inline-block;
-    font-size: 10px;
-    font-weight: 600;
-    padding: 1px 7px;
-    border-radius: 999px;
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 3px;
     text-transform: uppercase;
-    letter-spacing: .04em;
-    margin-top: 2px;
+    letter-spacing: .05em;
+    margin-top: 3px;
     width: fit-content;
+    color: #fff;
   }
-  .cat-world    { background:rgba(37,99,235,.08);   color:#2563eb; border:1px solid rgba(37,99,235,.2); }
-  .cat-tech     { background:rgba(124,58,237,.08);  color:#7c3aed; border:1px solid rgba(124,58,237,.2); }
-  .cat-science  { background:rgba(5,150,105,.08);   color:#059669; border:1px solid rgba(5,150,105,.2); }
-  .cat-business { background:rgba(234,88,12,.08);   color:#ea580c; border:1px solid rgba(234,88,12,.2); }
-  .cat-india    { background:rgba(220,38,38,.08);   color:#dc2626; border:1px solid rgba(220,38,38,.2); }
-  .cat-other    { background:rgba(100,116,139,.08); color:#64748b; border:1px solid rgba(100,116,139,.2); }
+  .cat-world    { background: #1d4ed8; }
+  .cat-tech     { background: #7c3aed; }
+  .cat-science  { background: #0891b2; }
+  .cat-business { background: #059669; }
+  .cat-india    { background: #ea580c; }
+  .cat-other    { background: #64748b; }
   .btn-add-feed {
     flex-shrink: 0;
-    padding: 5px 12px;
+    padding: 6px 14px;
     background: var(--accent);
     color: #fff;
     border: none;
-    border-radius: 6px;
+    border-radius: 5px;
     font-family: inherit;
     font-size: 12px;
     font-weight: 600;
@@ -575,32 +640,102 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     transition: background .15s;
     white-space: nowrap;
   }
-  .btn-add-feed:hover { background: #4f46e5; }
+  .btn-add-feed:hover { background: var(--accent-dark); }
   .btn-add-feed.btn-added {
-    background: rgba(5,150,105,.1);
+    background: rgba(5,150,105,.08);
     color: #059669;
-    border: 1px solid rgba(5,150,105,.2);
+    border: 1px solid rgba(5,150,105,.25);
     cursor: default;
   }
+
+  /* ── Custom feed form ────────────────────────────── */
+  .add-form { display: flex; flex-direction: column; gap: 14px; }
+  .form-field { display: flex; flex-direction: column; gap: 6px; }
+  .form-field label { font-size: 13px; font-weight: 600; }
+  .form-field input {
+    padding: 9px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: inherit;
+    font-size: 13.5px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .form-field input:focus { border-color: var(--accent); }
+  .form-error {
+    font-size: 12.5px;
+    color: var(--accent);
+    padding: 8px 12px;
+    background: rgba(230,57,70,.06);
+    border: 1px solid rgba(230,57,70,.2);
+    border-radius: 6px;
+  }
+  .form-actions { display: flex; justify-content: flex-end; }
+  .btn-primary {
+    padding: 9px 20px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-primary:hover { background: var(--accent-dark); }
+
+  /* ── Manage feeds list ───────────────────────────── */
+  .sources-list { display: flex; flex-direction: column; gap: 8px; }
+  .src-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+  }
+  .src-item-info { display: flex; flex-direction: column; gap: 2px; flex: 1; overflow: hidden; }
+  .src-item-name { font-size: 13px; font-weight: 600; }
+  .src-item-url { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .btn-remove {
+    flex-shrink: 0;
+    padding: 5px 12px;
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid rgba(230,57,70,.3);
+    border-radius: 5px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .btn-remove:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .no-sources { font-size: 13px; color: var(--muted); text-align: center; padding: 20px 0; }
 
   /* ── Responsive – tablet ─────────────────────────── */
   @media (max-width: 1024px) {
     .grid { grid-template-columns: repeat(2, 1fr); }
-    .sources { display: none; }
+    .card:nth-child(7n+1) { grid-column: span 2; }
   }
 
   /* ── Responsive – mobile ─────────────────────────── */
   @media (max-width: 640px) {
-    .header-inner { padding: 11px 16px; }
-    h1 { font-size: 16px; }
-    .brand-icon { width: 30px; height: 30px; font-size: 15px; }
-    .updated-badge { font-size: 11px; padding: 4px 10px; }
+    .header-inner { padding: 0 14px; }
+    h1 { font-size: 17px; }
+    .brand-icon { width: 28px; height: 28px; font-size: 14px; }
+    .updated-badge { display: none; }
     main { padding: 16px 12px 60px; }
-    .grid { grid-template-columns: 1fr; gap: 10px; }
-    .tabs { gap: 5px; padding-bottom: 10px; margin-bottom: 14px; }
-    .tab { padding: 8px 13px; font-size: 12.5px; min-height: 40px; }
-    .card { padding: 14px 15px 16px; gap: 9px; }
-    .card h3 { font-size: 14.5px; }
+    .grid { grid-template-columns: 1fr; gap: 12px; }
+    .card:nth-child(7n+1) { grid-column: span 1; }
+    .card:nth-child(7n+1) h3 { font-size: 17px; }
+    .tabs { margin-bottom: 18px; }
+    .tab { padding: 10px 12px; font-size: 12.5px; }
   }
 </style>
 </head>
@@ -891,18 +1026,25 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     });
   }
 
+  var CAT_LABELS = {canada:'Canada',world:'World',india:'India',tech:'Tech',business:'Business',science:'Science',other:'Other'};
+
   function makeCustomCard(item, feedName, feedCat) {
     var cat = catFromText(item.title + ' ' + item.desc) || feedCat || 'other';
-    var slug = feedName.toLowerCase().replace(/[^a-z0-9]/g, '-');
     var validImg = item.img && /^https?:\/\//i.test(item.img);
-    return '<article class="card" data-cat="' + escapeHtml(cat) + '" data-feed="' + escapeHtml(feedName) + '">' +
-      (validImg ? '<img class="card-img" src="' + escapeHtml(item.img) + '" alt="" loading="lazy" onerror="this.remove()"/>' : '') +
-      '<div class="card-top">' +
-        '<span class="source-badge src-' + escapeHtml(slug) + '">' + escapeHtml(feedName) + '</span>' +
-        '<time class="card-time">' + timeAgo(item.pubDate) + '</time>' +
+    var catLabel = CAT_LABELS[cat] || cat;
+    return '<article class="card' + (validImg ? '' : ' card--no-img') + '" data-cat="' + escapeHtml(cat) + '" data-feed="' + escapeHtml(feedName) + '">' +
+      '<div class="card-media">' +
+        (validImg ? '<img class="card-img" src="' + escapeHtml(item.img) + '" alt="" loading="lazy" onerror="this.remove()"/>' : '') +
+        '<span class="cat-chip">' + escapeHtml(catLabel) + '</span>' +
       '</div>' +
-      '<h3><a href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener">' + escapeHtml(item.title || '(untitled)') + '</a></h3>' +
-      (item.desc ? '<p class="desc">' + escapeHtml(item.desc.substring(0, 250)) + '</p>' : '') +
+      '<div class="card-body">' +
+        '<h3><a href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener">' + escapeHtml(item.title || '(untitled)') + '</a></h3>' +
+        (item.desc ? '<p class="desc">' + escapeHtml(item.desc.substring(0, 250)) + '</p>' : '') +
+        '<div class="card-meta">' +
+          '<span class="source-name">' + escapeHtml(feedName) + '</span>' +
+          '<time class="card-time">' + timeAgo(item.pubDate) + '</time>' +
+        '</div>' +
+      '</div>' +
     '</article>';
   }
 
