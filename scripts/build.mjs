@@ -10,6 +10,7 @@ const DIST = path.join(ROOT, "dist");
 
 const parser = new Parser({
   timeout: 15000,
+  headers: { "User-Agent": "Mozilla/5.0 (compatible; NewsAggBot/1.0; +https://github.com/snehas21/my-news-agg)" },
   customFields: { item: ["category", "categories", ["media:content", "mediaContent"], ["media:thumbnail", "mediaThumbnail"]] }
 });
 
@@ -62,11 +63,13 @@ const CATEGORY_RULES = [
   { key: "business", re: /\b(stocks?|market cap|economy|gdp|inflation|fed |federal reserve|central bank|interest rate|ipo|earnings|revenue|profit|crypto|bitcoin|ethereum|invest\w*|hedge fund|nasdaq|dow jones|s&p|financial|venture capital|acquisition|merger|layoffs?|recession|fiscal|treasury|bonds?|wall street)\b/i },
   { key: "science",  re: /\b(health|medical|drug|vaccine|cancer|disease|treatment|surgery|hospital|clinical|therapy|covid|pandemic|climate|global warming|space|nasa|spacex|research|scientists?|biology|physics|quantum|asteroid|planet|species|genome|crispr|evolution)\b/i },
   { key: "tech",     re: /\b(ai\b|artificial intelligence|machine learning|software|hardware|\bapp\b|iphone|android|google|apple|microsoft|\bmeta\b|amazon|chip|gpu|cpu|startup|developer|coding|programming|cloud|cybersecurity|data breach|hack\w*|robot\w*|gadget|smartphone|electric vehicle|\bev\b|autonomous|openai|llm|chatgpt|algorithm|data center)\b/i },
+  { key: "nba",      re: /\b(nba|raptors|toronto raptors|basketball|lakers|celtics|warriors|heat|knicks|bulls|nets|sixers|bucks|suns|nuggets|clippers|spurs|lebron|curry|durant|giannis|trade deadline|draft pick|free agent|playoff|nba finals|slam dunk|three-pointer|point guard|power forward|small forward|center|shooting guard|coach\w*|roster|nba draft)\b/i },
 ];
 const TECH_SOURCES   = new Set(["the verge", "hacker news", "techcrunch", "zdnet", "engadget", "wired", "ars technica", "the register"]);
 const CANADA_SOURCES = new Set(["cbc top stories", "cbc canada"]);
 const INDIA_SOURCES  = new Set(["ndtv", "the hindu", "indian express", "times of india"]);
 const SCIENCE_SOURCES = new Set(["nasa", "science daily"]);
+const NBA_SOURCES    = new Set(["espn nba", "yahoo sports nba", "hoopshype", "raptors republic"]);
 
 const SOURCE_DOMAINS = {
   "BBC World": "bbc.co.uk", "BBC Sport": "bbc.co.uk",
@@ -80,15 +83,18 @@ const SOURCE_DOMAINS = {
   "NASA": "nasa.gov", "Science Daily": "sciencedaily.com",
   "NDTV": "ndtv.com", "Times of India": "timesofindia.com",
   "Indian Express": "indianexpress.com",
+  "ESPN NBA": "espn.com", "Yahoo Sports NBA": "yahoo.com",
+  "HoopsHype": "hoopshype.com", "Raptors Republic": "raptorsrepublic.com",
 };
 
-const CAT_LABEL = { canada:"Canada", world:"World", india:"India", tech:"Tech", business:"Business", science:"Science", other:"Other" };
+const CAT_LABEL = { canada:"Canada", world:"World", india:"India", tech:"Tech", business:"Business", science:"Science", nba:"NBA", other:"Other" };
 
 const categorize = (title, desc, sourceName) => {
   const text = (title + " " + (desc || "")).toLowerCase();
   for (const { key, re } of CATEGORY_RULES) {
     if (re.test(text)) return key;
   }
+  if (NBA_SOURCES.has(sourceName.toLowerCase())) return "nba";
   if (CANADA_SOURCES.has(sourceName.toLowerCase())) return "canada";
   if (INDIA_SOURCES.has(sourceName.toLowerCase())) return "india";
   if (TECH_SOURCES.has(sourceName.toLowerCase())) return "tech";
@@ -401,6 +407,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   .card[data-cat="tech"]     .cat-chip { background: #7c3aed; }
   .card[data-cat="business"] .cat-chip { background: #059669; }
   .card[data-cat="science"]  .cat-chip { background: #0891b2; }
+  .card[data-cat="nba"]      .cat-chip { background: #c9243f; }
   .card[data-cat="other"]    .cat-chip { background: #64748b; }
 
   /* ── Card body ───────────────────────────────────── */
@@ -768,6 +775,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
       <button class="tab" data-tab="tech">Tech <span class="tab-count"></span></button>
       <button class="tab" data-tab="business">Business <span class="tab-count"></span></button>
       <button class="tab" data-tab="science">Science &amp; Health <span class="tab-count"></span></button>
+      <button class="tab" data-tab="nba">🏀 NBA &amp; Raptors <span class="tab-count"></span></button>
       <button class="tab" data-tab="other">Other <span class="tab-count"></span></button>
     </nav>
     <section class="grid" id="main-grid">${cardsHTML}</section>
@@ -1026,7 +1034,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     });
   }
 
-  var CAT_LABELS = {canada:'Canada',world:'World',india:'India',tech:'Tech',business:'Business',science:'Science',other:'Other'};
+  var CAT_LABELS = {canada:'Canada',world:'World',india:'India',tech:'Tech',business:'Business',science:'Science',nba:'NBA',other:'Other'};
 
   function makeCustomCard(item, feedName, feedCat) {
     var cat = catFromText(item.title + ' ' + item.desc) || feedCat || 'other';
