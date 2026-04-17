@@ -276,6 +276,7 @@
   .card[data-cat="tech"]     .cat-chip { background: #7c3aed; }
   .card[data-cat="business"] .cat-chip { background: #059669; }
   .card[data-cat="science"]  .cat-chip { background: #0891b2; }
+  .card[data-cat="nba"]      .cat-chip { background: #c9243f; }
   .card[data-cat="other"]    .cat-chip { background: #64748b; }
 
   /* ── Card body ───────────────────────────────────── */
@@ -624,10 +625,10 @@
       <div class="header-right">
         <span class="updated-badge">
           <span class="updated-dot"></span>
-          Updated 2026-04-11 18:03 UTC
+          Updated 2026-04-17 16:14 UTC
         </span>
         <div class="sources">
-          <span class="pill src-bbc-world">BBC World</span><span class="pill src-associated-press">Associated Press</span><span class="pill src-npr-news">NPR News</span><span class="pill src-the-guardian">The Guardian</span><span class="pill src-al-jazeera">Al Jazeera</span><span class="pill src-cbc-top-stories">CBC Top Stories</span><span class="pill src-cbc-canada">CBC Canada</span><span class="pill src-the-verge">The Verge</span><span class="pill src-hacker-news">Hacker News</span><span class="pill src-techcrunch">TechCrunch</span><span class="pill src-ars-technica">Ars Technica</span><span class="pill src-the-register">The Register</span><span class="pill src-yahoo-finance">Yahoo Finance</span><span class="pill src-investopedia">Investopedia</span><span class="pill src-nasa">NASA</span><span class="pill src-science-daily">Science Daily</span><span class="pill src-ndtv">NDTV</span><span class="pill src-times-of-india">Times of India</span><span class="pill src-indian-express">Indian Express</span><span class="pill src-bbc-sport">BBC Sport</span>
+          <span class="pill src-bbc-world">BBC World</span><span class="pill src-associated-press">Associated Press</span><span class="pill src-npr-news">NPR News</span><span class="pill src-the-guardian">The Guardian</span><span class="pill src-al-jazeera">Al Jazeera</span><span class="pill src-cbc-top-stories">CBC Top Stories</span><span class="pill src-cbc-canada">CBC Canada</span><span class="pill src-the-verge">The Verge</span><span class="pill src-hacker-news">Hacker News</span><span class="pill src-techcrunch">TechCrunch</span><span class="pill src-ars-technica">Ars Technica</span><span class="pill src-the-register">The Register</span><span class="pill src-yahoo-finance">Yahoo Finance</span><span class="pill src-investopedia">Investopedia</span><span class="pill src-nasa">NASA</span><span class="pill src-science-daily">Science Daily</span><span class="pill src-ndtv">NDTV</span><span class="pill src-times-of-india">Times of India</span><span class="pill src-indian-express">Indian Express</span><span class="pill src-bbc-sport">BBC Sport</span><span class="pill src-espn-nba">ESPN NBA</span><span class="pill src-yahoo-sports-nba">Yahoo Sports NBA</span><span class="pill src-hoopshype">HoopsHype</span><span class="pill src-raptors-republic">Raptors Republic</span>
         </div>
         <button class="btn-discover" id="open-feeds-modal">+ Discover Feeds</button>
       </div>
@@ -643,6 +644,7 @@
       <button class="tab" data-tab="tech">Tech <span class="tab-count"></span></button>
       <button class="tab" data-tab="business">Business <span class="tab-count"></span></button>
       <button class="tab" data-tab="science">Science &amp; Health <span class="tab-count"></span></button>
+      <button class="tab" data-tab="nba">🏀 NBA &amp; Raptors <span class="tab-count"></span></button>
       <button class="tab" data-tab="other">Other <span class="tab-count"></span></button>
     </nav>
     <section class="grid" id="main-grid"></section>
@@ -901,7 +903,7 @@
     });
   }
 
-  var CAT_LABELS = {canada:'Canada',world:'World',india:'India',tech:'Tech',business:'Business',science:'Science',other:'Other'};
+  var CAT_LABELS = {canada:'Canada',world:'World',india:'India',tech:'Tech',business:'Business',science:'Science',nba:'NBA',other:'Other'};
 
   function makeCustomCard(item, feedName, feedCat) {
     var cat = catFromText(item.title + ' ' + item.desc) || feedCat || 'other';

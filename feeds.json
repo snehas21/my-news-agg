@@ -19,6 +19,10 @@
     {"name": "NDTV",                   "url": "https://feeds.feedburner.com/ndtvnews-top-stories",                 "maxItems": 10},
     {"name": "Times of India",          "url": "https://timesofindia.indiatimes.com/rssfeedstopstories.cms",         "maxItems": 10},
     {"name": "Indian Express",         "url": "https://indianexpress.com/section/trending/feed/",                  "maxItems": 10},
-    {"name": "BBC Sport",              "url": "https://feeds.bbci.co.uk/sport/rss.xml",                            "maxItems": 8}
+    {"name": "BBC Sport",              "url": "https://feeds.bbci.co.uk/sport/rss.xml",                            "maxItems": 8},
+    {"name": "ESPN NBA",               "url": "https://www.espn.com/espn/rss/nba/news",                             "maxItems": 15},
+    {"name": "Yahoo Sports NBA",       "url": "https://sports.yahoo.com/nba/rss.xml",                               "maxItems": 12},
+    {"name": "HoopsHype",              "url": "https://hoopshype.com/feed/",                                        "maxItems": 10},
+    {"name": "Raptors Republic",       "url": "https://raptorsrepublic.com/feed/",                                  "maxItems": 12}
   ]
 }
