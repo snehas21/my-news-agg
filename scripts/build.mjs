@@ -64,7 +64,9 @@ const CATEGORY_RULES = [
   { key: "science",  re: /\b(health|medical|drug|vaccine|cancer|disease|treatment|surgery|hospital|clinical|therapy|covid|pandemic|climate|global warming|space|nasa|spacex|research|scientists?|biology|physics|quantum|asteroid|planet|species|genome|crispr|evolution)\b/i },
   { key: "tech",     re: /\b(ai\b|artificial intelligence|machine learning|software|hardware|\bapp\b|iphone|android|google|apple|microsoft|\bmeta\b|amazon|chip|gpu|cpu|startup|developer|coding|programming|cloud|cybersecurity|data breach|hack\w*|robot\w*|gadget|smartphone|electric vehicle|\bev\b|autonomous|openai|llm|chatgpt|algorithm|data center)\b/i },
   { key: "nba",      re: /\b(nba|raptors|toronto raptors|basketball|lakers|celtics|warriors|heat|knicks|bulls|nets|sixers|bucks|suns|nuggets|clippers|spurs|lebron|curry|durant|giannis|trade deadline|draft pick|free agent|playoff|nba finals|slam dunk|three-pointer|point guard|power forward|small forward|center|shooting guard|coach\w*|roster|nba draft)\b/i },
+  { key: "retail",   re: /\b(walmart|amazon|target|costco|home depot|lowe's|lowes|kroger|walgreens|cvs|dollar general|dollar tree|best buy|macy's|macys|nordstrom|gap|old navy|tj maxx|tjmaxx|marshalls|ross stores|kohls|kohl's|sephora|ulta|bed bath|staples|office depot|retail|retailer|e-commerce|ecommerce|omnichannel|brick.and.mortar|store sales|same.store|consumer spending|shopping|supply chain retail|merchandise|inventory shrink|shoplifting|checkout|pos system|point.of.sale|retail tech|store brand|private label|fulfillment center|last.mile|click.and.collect|curbside pickup|grocery store|supermarket|convenience store|department store|big box)\b/i },
 ];
+const RETAIL_SOURCES = new Set(["retail dive", "chain store age", "supermarket news", "grocery dive", "digital commerce 360", "ris news", "pymnts retail", "retail gazette"]);
 const TECH_SOURCES   = new Set(["the verge", "hacker news", "techcrunch", "zdnet", "engadget", "wired", "ars technica", "the register"]);
 const CANADA_SOURCES = new Set(["cbc top stories", "cbc canada"]);
 const INDIA_SOURCES  = new Set(["ndtv", "the hindu", "indian express", "times of india"]);
@@ -85,9 +87,13 @@ const SOURCE_DOMAINS = {
   "Indian Express": "indianexpress.com",
   "ESPN NBA": "espn.com", "Yahoo Sports NBA": "yahoo.com",
   "HoopsHype": "hoopshype.com", "Raptors Republic": "raptorsrepublic.com",
+  "Retail Dive": "retaildive.com", "Chain Store Age": "chainstoreage.com",
+  "Supermarket News": "supermarketnews.com", "Grocery Dive": "grocerydive.com",
+  "Digital Commerce 360": "digitalcommerce360.com", "RIS News": "risnews.com",
+  "PYMNTS Retail": "pymnts.com", "Retail Gazette": "retailgazette.co.uk",
 };
 
-const CAT_LABEL = { canada:"Canada", world:"World", india:"India", tech:"Tech", business:"Business", science:"Science", nba:"NBA", other:"Other" };
+const CAT_LABEL = { canada:"Canada", world:"World", india:"India", tech:"Tech", business:"Business", science:"Science", nba:"NBA", retail:"Retail", other:"Other" };
 
 const categorize = (title, desc, sourceName) => {
   const text = (title + " " + (desc || "")).toLowerCase();
@@ -95,6 +101,7 @@ const categorize = (title, desc, sourceName) => {
     if (re.test(text)) return key;
   }
   if (NBA_SOURCES.has(sourceName.toLowerCase())) return "nba";
+  if (RETAIL_SOURCES.has(sourceName.toLowerCase())) return "retail";
   if (CANADA_SOURCES.has(sourceName.toLowerCase())) return "canada";
   if (INDIA_SOURCES.has(sourceName.toLowerCase())) return "india";
   if (TECH_SOURCES.has(sourceName.toLowerCase())) return "tech";
@@ -408,6 +415,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   .card[data-cat="business"] .cat-chip { background: #059669; }
   .card[data-cat="science"]  .cat-chip { background: #0891b2; }
   .card[data-cat="nba"]      .cat-chip { background: #c9243f; }
+  .card[data-cat="retail"]   .cat-chip { background: #b45309; }
   .card[data-cat="other"]    .cat-chip { background: #64748b; }
 
   /* ── Card body ───────────────────────────────────── */
@@ -632,6 +640,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
   .cat-science  { background: #0891b2; }
   .cat-business { background: #059669; }
   .cat-india    { background: #ea580c; }
+  .cat-retail   { background: #b45309; }
   .cat-other    { background: #64748b; }
   .btn-add-feed {
     flex-shrink: 0;
@@ -776,6 +785,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
       <button class="tab" data-tab="business">Business <span class="tab-count"></span></button>
       <button class="tab" data-tab="science">Science &amp; Health <span class="tab-count"></span></button>
       <button class="tab" data-tab="nba">🏀 NBA &amp; Raptors <span class="tab-count"></span></button>
+      <button class="tab" data-tab="retail">🛒 Retail <span class="tab-count"></span></button>
       <button class="tab" data-tab="other">Other <span class="tab-count"></span></button>
     </nav>
     <section class="grid" id="main-grid">${cardsHTML}</section>
@@ -800,6 +810,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
           <button class="cat-filter-btn" data-cat="science">Science</button>
           <button class="cat-filter-btn" data-cat="business">Business</button>
           <button class="cat-filter-btn" data-cat="india">India</button>
+          <button class="cat-filter-btn" data-cat="retail">Retail</button>
           <button class="cat-filter-btn" data-cat="other">Sports &amp; More</button>
         </div>
         <div class="suggest-list" id="suggested-feeds-list"></div>
@@ -859,7 +870,15 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     {name:"BBC Sport",             url:"https://feeds.bbci.co.uk/sport/rss.xml",                             cat:"other",    desc:"Sports coverage from BBC"},
     {name:"ESPN Headlines",        url:"https://www.espn.com/espn/rss/news",                                 cat:"other",    desc:"Sports news from ESPN"},
     {name:"Lifehacker",            url:"https://lifehacker.com/feed/rss",                                    cat:"other",    desc:"Life hacks and productivity tips"},
-    {name:"OpenCulture",           url:"https://www.openculture.com/feed",                                   cat:"other",    desc:"Free cultural & educational media"}
+    {name:"OpenCulture",           url:"https://www.openculture.com/feed",                                   cat:"other",    desc:"Free cultural & educational media"},
+    {name:"Retail Dive",           url:"https://www.retaildive.com/feeds/news/",                              cat:"retail",   desc:"In-depth retail industry news and analysis"},
+    {name:"Chain Store Age",       url:"https://chainstoreage.com/rss.xml",                                   cat:"retail",   desc:"News for retail executives – stores, technology, ops"},
+    {name:"Supermarket News",      url:"https://www.supermarketnews.com/rss.xml",                             cat:"retail",   desc:"Grocery and supermarket industry coverage"},
+    {name:"Grocery Dive",          url:"https://www.grocerydive.com/feeds/news/",                             cat:"retail",   desc:"Grocery retail business news and trends"},
+    {name:"Digital Commerce 360",  url:"https://www.digitalcommerce360.com/feed/",                           cat:"retail",   desc:"E-commerce and omnichannel retail insights"},
+    {name:"RIS News",              url:"https://risnews.com/rss.xml",                                         cat:"retail",   desc:"Retail technology and IT news"},
+    {name:"PYMNTS Retail",         url:"https://www.pymnts.com/feed/",                                        cat:"retail",   desc:"Payments, commerce and retail fintech news"},
+    {name:"Retail Gazette",        url:"https://www.retailgazette.co.uk/feed/",                               cat:"retail",   desc:"UK retail news covering major chains and trends"}
   ];
 
   // ── LocalStorage helpers ───────────────────────────
@@ -1008,6 +1027,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     if (/\b(stocks?|economy|gdp|inflation|bitcoin|crypto|nasdaq|earnings|revenue|wall street|invest)\b/.test(t)) return 'business';
     if (/\b(health|medical|vaccine|covid|cancer|climate|space|nasa|science|research|biology|physics)\b/.test(t)) return 'science';
     if (/\b(war|conflict|ukraine|russia|china|israel|gaza|nato|election|military|president|minister)\b/.test(t)) return 'world';
+    if (/\b(walmart|amazon|target|costco|home depot|lowes|kroger|retail|ecommerce|e-commerce|omnichannel|supermarket|grocery store|department store|big box|store sales|consumer spending|fulfillment|curbside)\b/.test(t)) return 'retail';
     return 'other';
   }
 
@@ -1034,7 +1054,7 @@ const pageTemplate = (cardsHTML, updatedAt, sourcesList) => `<!doctype html>
     });
   }
 
-  var CAT_LABELS = {canada:'Canada',world:'World',india:'India',tech:'Tech',business:'Business',science:'Science',nba:'NBA',other:'Other'};
+  var CAT_LABELS = {canada:'Canada',world:'World',india:'India',tech:'Tech',business:'Business',science:'Science',nba:'NBA',retail:'Retail',other:'Other'};
 
   function makeCustomCard(item, feedName, feedCat) {
     var cat = catFromText(item.title + ' ' + item.desc) || feedCat || 'other';

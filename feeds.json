@@ -23,6 +23,15 @@
     {"name": "ESPN NBA",               "url": "https://www.espn.com/espn/rss/nba/news",                             "maxItems": 15},
     {"name": "Yahoo Sports NBA",       "url": "https://sports.yahoo.com/nba/rss.xml",                               "maxItems": 12},
     {"name": "HoopsHype",              "url": "https://hoopshype.com/feed/",                                        "maxItems": 10},
-    {"name": "Raptors Republic",       "url": "https://raptorsrepublic.com/feed/",                                  "maxItems": 12}
+    {"name": "Raptors Republic",       "url": "https://raptorsrepublic.com/feed/",                                  "maxItems": 12},
+
+    {"name": "Retail Dive",            "url": "https://www.retaildive.com/feeds/news/",                               "maxItems": 12},
+    {"name": "Chain Store Age",        "url": "https://chainstoreage.com/rss.xml",                                    "maxItems": 10},
+    {"name": "Supermarket News",       "url": "https://www.supermarketnews.com/rss.xml",                              "maxItems": 10},
+    {"name": "Grocery Dive",           "url": "https://www.grocerydive.com/feeds/news/",                              "maxItems": 10},
+    {"name": "Digital Commerce 360",   "url": "https://www.digitalcommerce360.com/feed/",                             "maxItems": 10},
+    {"name": "RIS News",               "url": "https://risnews.com/rss.xml",                                          "maxItems": 10},
+    {"name": "PYMNTS Retail",          "url": "https://www.pymnts.com/feed/",                                         "maxItems": 10},
+    {"name": "Retail Gazette",         "url": "https://www.retailgazette.co.uk/feed/",                                "maxItems": 10}
   ]
 }
